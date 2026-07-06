@@ -1,20 +1,23 @@
 # Mint Duck Race Arena
 
-Web game tĩnh chạy trực tiếp trên trình duyệt bằng HTML5, CSS3, JavaScript thuần và Canvas API.
+Web game dua vit chay truc tiep tren trinh duyet bang HTML5, CSS3, JavaScript thuan va Canvas API.
 
-## Điểm chính
+## Dac diem ban sua loi
 
-- Không backend.
-- Không database.
-- Không đăng nhập.
-- Không localStorage.
-- Trạng thái ván đua chỉ nằm trong RAM trình duyệt. Reload trang là reset.
-- Mỗi người chơi được xếp một làn riêng như sân điền kinh.
-- Số làn sinh tự động theo số người chơi, tối thiểu 2 và tối đa 12.
-- Màu đường đua lấy theo ảnh mẫu: xanh tím `#6F71B0`, viền đậm `#3A3761`, vạch trắng `#EAECF8`.
-- Có logic race engine gồm chỉ số ẩn, sự kiện 2-4 giây/lần, đường tắt, cản nhau, slipstream, rubber-band nhẹ, final sprint và xác suất 15% có tối đa 2 người cán đích đồng thời.
+- Giao dien mint green gon hon, khong con badge chu lon de bi de len noi dung.
+- Duong dua xanh tim tach lan rieng, so lan tu sinh theo so nguoi choi tu 2 den 12.
+- Moi tay dua co chi so an: baseSpeed, burst, stability, luck, courage.
+- Su kien dien ra cham hon: moi 2 den 4 giay moi phat sinh mot su kien lon.
+- Binh luan ticker giu toi thieu khoang 2 giay de nguoi choi doc kip.
+- Bubble tren duong dua giu toi thieu khoang 1 giay.
+- Nguoi cham vach dich moi duoc tinh ket qua.
+- Voi van 15 giay, engine gan pacing de it nhat nguoi hang nhat cham dich truoc khi het thoi gian.
+- Co 15% kha nang hai nguoi ve dich gan nhu dong thoi, toi da 2 nguoi.
+- Co rubber-band nhe, khong buff qua lo cho mot nguoi.
+- 20% thoi gian cuoi tang xac suat finalSprint.
+- Khong dung backend, database, localStorage. Reload trang la reset.
 
-## Cấu trúc file
+## Cau truc file
 
 ```text
 index.html
@@ -27,42 +30,40 @@ assets/
 README.md
 ```
 
-## Cách chạy
+## Cach chay
 
-Mở trực tiếp file `index.html` bằng trình duyệt Chrome, Edge hoặc Firefox.
+Mo truc tiep file `index.html` bang trinh duyet hoac upload len GitHub Pages/Render Static Site.
 
-## Cách deploy GitHub Pages
+## Cach upload len GitHub Pages
 
-1. Giải nén file ZIP.
-2. Vào GitHub và tạo repository mới, ví dụ `mint-duck-race-arena`.
-3. Bấm `Add file` > `Upload files`.
-4. Kéo toàn bộ file và thư mục sau khi giải nén lên repository. Lưu ý `index.html` phải nằm ngay thư mục gốc repository, không để lồng trong thư mục con.
-5. Bấm `Commit changes`.
-6. Vào `Settings` > `Pages`.
-7. Ở `Build and deployment`, chọn `Deploy from a branch`.
-8. Chọn branch `main`, folder `/root`, rồi bấm `Save`.
-9. Đợi GitHub cấp link dạng `https://ten-tai-khoan.github.io/ten-repository/`.
+1. Giai nen file ZIP.
+2. Tao repository moi tren GitHub, vi du `duck-race-arena`.
+3. Vao repository, chon **Add file** > **Upload files**.
+4. Keo toan bo file va thu muc ben trong folder da giai nen len GitHub.
+5. Bam **Commit changes**.
+6. Vao **Settings** > **Pages**.
+7. Muc **Build and deployment**, chon **Deploy from a branch**.
+8. Chon branch `main`, folder `/root`, bam **Save**.
+9. Doi GitHub tao link dang `https://ten-tai-khoan.github.io/duck-race-arena/`.
 
-## Cách deploy Render Static Site
+Luu y: `index.html` phai nam ngay o thu muc goc repository. Khong upload nguyen folder boc ngoai lam cho `index.html` nam long ben trong mot thu muc con.
 
-1. Đưa toàn bộ mã nguồn lên GitHub repository.
-2. Vào Render, chọn `New` > `Static Site`.
-3. Kết nối repository vừa tạo.
-4. Build Command: để trống.
-5. Publish Directory: nhập `.`.
-6. Bấm `Create Static Site`.
+## Cach deploy Render Static Site
 
-## Chỉnh thông số game
+1. Dua source code len GitHub.
+2. Vao Render, chon **New** > **Static Site**.
+3. Ket noi repository.
+4. Build Command de trong.
+5. Publish Directory nhap `.`.
+6. Deploy.
 
-Mở `script.js` và chỉnh các vùng sau:
+## Cach chinh thong so game
 
-- `ANIMAL_DATA`: danh sách con vật, emoji, màu đại diện.
-- `MAP_DATA`: dữ liệu map, đường tắt, đoạn hẹp, đoạn cua, độ rủi ro.
-- `EVENT_COMMENTS`: câu bình luận tiếng Việt cho từng sự kiện.
-- `createHiddenStats()`: cách sinh chỉ số ẩn.
-- `getRubberBandMultiplier()`: mức cân bằng để không bỏ xa quá sớm.
-- `triggerRaceEvent()`: trọng số sự kiện.
+Mo `script.js`, tim cac vung sau:
 
-## Thay asset thật
+- `GAME_CONFIG`: thoi gian su kien, so nguoi choi, ty le dong hang.
+- `ANIMAL_DATA`: danh sach con vat.
+- `MAP_DATA`: mau duong dua, do kho cua cua, rui ro duong tat.
+- `EVENT_COMMENTS`: cau binh luan truc tiep.
+- `RaceEngine`: module logic dua.
 
-Hiện game đang dùng emoji/placeholder để nhẹ và dễ chạy. Sau này có thể thay bằng PNG trong `assets/animals/`. Khi thay thật, nên preload ảnh trong `script.js` trước khi vẽ Canvas để tránh giật khung hình.

@@ -8,25 +8,29 @@
 </head>
 <body>
   <main class="app-shell">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">Casual Web Game</p>
+    <header class="game-header">
+      <div class="title-block">
+        <span class="eyebrow">Casual Web Game</span>
         <h1>Mint Duck Race Arena</h1>
-        <p class="subtitle">Đường đua xanh tím, mỗi tay đua một làn, sự kiện bất ngờ từng chặng.</p>
+        <p>Đường đua xanh tím tách làn, mỗi người một lane, sự kiện diễn ra chậm để dễ theo dõi.</p>
       </div>
-      <div class="hero-badge">RAM-only<br><strong>Reload = Reset</strong></div>
+      <div class="status-badge" title="Game khong luu du lieu">
+        <span>RAM only</span>
+        <strong>Reload = Reset</strong>
+      </div>
     </header>
 
-    <section class="game-layout">
-      <aside class="setup-card card">
-        <h2>Thiết lập ván đua</h2>
-        <label for="playerNames">Tên người chơi, mỗi dòng một người</label>
+    <section class="top-control card">
+      <div class="names-box">
+        <label for="playerNames">Tên người chơi <small>mỗi dòng một người, 2 đến 12 người</small></label>
         <textarea id="playerNames" spellcheck="false">Khải
 Lan
 Tùng
 Minh
 Vy
 Huy</textarea>
+      </div>
+      <div class="settings-box">
         <div class="quick-row">
           <button type="button" class="soft-btn" data-sample="3">3 người</button>
           <button type="button" class="soft-btn" data-sample="5">5 người</button>
@@ -34,55 +38,61 @@ Huy</textarea>
         </div>
         <label for="mapSelect">Chọn map</label>
         <select id="mapSelect"></select>
-        <div class="split-row">
-          <label for="raceDuration">Thời gian: <strong id="durationLabel">30 giây</strong></label>
-          <input id="durationNumber" type="number" min="15" max="90" step="1" value="30" />
+        <div class="duration-line">
+          <label for="raceDuration">Thời gian: <b id="durationLabel">30 giây</b></label>
+          <input id="durationNumber" type="number" min="15" max="90" value="30" />
         </div>
         <input id="raceDuration" type="range" min="15" max="90" step="1" value="30" />
         <div class="action-grid">
           <button type="button" id="startBtn" class="primary-btn">Bắt đầu</button>
-          <button type="button" id="replayBtn" class="accent-btn" disabled>Chơi lại</button>
+          <button type="button" id="replayBtn" class="gold-btn" disabled>Chơi lại</button>
           <button type="button" id="randomMapBtn" class="soft-btn">Random map</button>
-          <button type="button" id="resetBtn" class="soft-btn danger-soft">Reset tên</button>
+          <button type="button" id="resetBtn" class="rose-btn">Reset tên</button>
         </div>
-        <p class="small-note">Không dùng backend, database hoặc localStorage. Tất cả trạng thái chỉ tồn tại trong RAM trình duyệt.</p>
-      </aside>
+      </div>
+    </section>
 
-      <section class="arena-card card">
-        <div class="arena-topbar">
+    <section class="main-grid">
+      <section class="arena-panel card">
+        <div class="panel-head">
           <div>
-            <h2 id="raceTitle">Đường đua làn riêng</h2>
-            <p id="raceMeta">Sẵn sàng vào vạch xuất phát.</p>
+            <h2 id="raceTitle">Sân Mint Violet</h2>
+            <p id="raceMeta">Mỗi tay đua có một làn riêng. Chạm vạch đích mới tính kết quả.</p>
           </div>
-          <div class="timer-pill"><span id="timerText">30.0s</span></div>
+          <div class="timer-pill" id="timerText">30.0s</div>
         </div>
-        <div class="canvas-wrap">
-          <canvas id="raceCanvas" width="980" height="620" aria-label="Đường đua"></canvas>
+        <div class="canvas-frame">
+          <canvas id="raceCanvas" width="1200" height="680" aria-label="Đường đua"></canvas>
         </div>
         <div class="ticker" id="commentaryTicker">
-          <span>Chờ người chơi nhập tên và bấm Bắt đầu.</span>
+          <span>Nhập tên người chơi rồi bấm Bắt đầu.</span>
         </div>
       </section>
 
-      <aside class="ranking-card card">
-        <h2>Bảng xếp hạng</h2>
+      <aside class="rank-panel card">
+        <div class="panel-head rank-head">
+          <div>
+            <h2>Bảng xếp hạng</h2>
+            <p>Realtime, chữ lớn, tự nhảy nhẹ khi đổi hạng.</p>
+          </div>
+        </div>
         <ol id="rankingList" class="ranking-list"></ol>
-        <div class="event-guide">
-          <strong>Sự kiện có thể xảy ra</strong>
-          <p>Gió ngược, gió xuôi, vấp té, trượt cua, chắn đường, va chạm, đu bám, đường tắt và bứt tốc cuối chặng.</p>
+        <div class="logic-note">
+          <strong>Nhịp sự kiện</strong>
+          <p>Mỗi sự kiện cách nhau khoảng 2-4 giây. Bubble trên đường đua giữ tối thiểu 1 giây để kịp đọc.</p>
         </div>
       </aside>
     </section>
   </main>
 
   <div id="resultOverlay" class="result-overlay" hidden>
-    <div class="result-card">
+    <section class="result-card">
       <button type="button" id="closeResultBtn" class="close-btn" aria-label="Đóng">×</button>
-      <p class="eyebrow">Kết quả cuộc đua</p>
-      <h2>Top về đích</h2>
+      <span class="eyebrow">Kết quả cuộc đua</span>
+      <h2>Top 1 - Top 2 - Top 3</h2>
       <div id="podium" class="podium"></div>
-      <button type="button" id="playAgainBigBtn" class="primary-btn">Chơi lượt mới</button>
-    </div>
+      <button type="button" id="playAgainBigBtn" class="primary-btn big-action">Chơi lượt mới</button>
+    </section>
   </div>
 
   <script src="script.js"></script>
