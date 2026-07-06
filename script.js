@@ -1611,7 +1611,8 @@ class GameApp {
   }
 
   drawRacerSprite(ctx, racer, p, now) {
-    const size = clamp(34 - this.engine.racers.length * 0.7, 22, 32);
+    const size = clamp(27 - this.engine.racers.length * 0.45, 17, 23);
+    const spriteSize = size * 2.05;
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
     const frameIndex = paused ? 0 : Math.floor(((now * 8) + racer.index * 0.7) % 4);
@@ -1620,26 +1621,26 @@ class GameApp {
 
     ctx.save();
     ctx.translate(p.x, p.y);
-    ctx.rotate(p.angle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.14 : 0));
-    if (paused) ctx.scale(1.08, 0.88);
+    ctx.rotate(p.angle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.12 : 0));
+    if (paused) ctx.scale(1.06, 0.9);
 
-    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+    ctx.fillStyle = 'rgba(0,0,0,0.20)';
     ctx.beginPath();
-    ctx.ellipse(0, size * 0.72, size * 0.70, size * 0.20, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, size * 0.78, size * 0.62, size * 0.16, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (img && img.complete) {
-      ctx.drawImage(img, -size, -size, size * 2, size * 2);
+      ctx.drawImage(img, -spriteSize / 2, -spriteSize / 2, spriteSize, spriteSize);
     } else {
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
-      ctx.arc(0, 0, size * 0.8, 0, Math.PI * 2);
+      ctx.arc(0, 0, size * 0.72, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#2DD4BF';
       ctx.lineWidth = 3;
       ctx.stroke();
       ctx.fillStyle = '#12372A';
-      ctx.font = '900 11px system-ui, sans-serif';
+      ctx.font = '900 10px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(racer.character.label, 0, 0);
@@ -1653,10 +1654,10 @@ class GameApp {
     const label = racer.name.length > 10 ? `${racer.name.slice(0, 10)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(18,55,42,0.82)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 6, p.y + size + 2, textWidth + 12, 18, 9);
+    this.roundRect(ctx, p.x - textWidth / 2 - 6, p.y + size + 4, textWidth + 12, 18, 9);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
-    ctx.fillText(label, p.x, p.y + size + 5);
+    ctx.fillText(label, p.x, p.y + size + 7);
     ctx.restore();
   }
 
