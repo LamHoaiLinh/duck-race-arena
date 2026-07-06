@@ -43,3 +43,7 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 
 - Da sua huong quay nhan vat muot hon khi vao doan dao chieu, dau nhan vat se huong theo chieu chay tot hon va giam cam giac chong dit.
 - Da lam muot chuyen dong bang cach noi suy giua cac frame sprite de giam giat cuc.
+
+- Da tang do nghieng than khi om cua, nhan vat nghieng nhe theo huong cua de nhin song dong hon.
+- Da nang cap chu ky chay len kieu 8-pha (ao 8 frame) de animation muot hon.
+- Da sua cu nhay bat pha: nhan vat se bay qua va ha xuong muot hon, khong con bien mat o diem cu roi xuat hien dot ngot o diem moi.

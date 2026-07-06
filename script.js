@@ -334,13 +334,21 @@ function sampleTrack(track, progress) {
 }
 
 function getLanePoint(track, laneIndex, progress, extraShift = 0) {
-  const base = sampleTrack(track, progress + extraShift);
+  const baseProgress = progress + extraShift;
+  const base = sampleTrack(track, baseProgress);
   const laneT = (laneIndex + 0.5) / track.lanes;
   const offset = -track.trackWidth / 2 + laneT * track.trackWidth;
   const x = base.x + base.nx * offset;
   const y = base.y + base.ny * offset;
   const angle = Math.atan2(base.ty, base.tx);
-  return { x, y, angle, nx: base.nx, ny: base.ny, tx: base.tx, ty: base.ty };
+
+  const back = sampleTrack(track, baseProgress - 0.0032);
+  const ahead = sampleTrack(track, baseProgress + 0.0032);
+  const backAngle = Math.atan2(back.ty, back.tx);
+  const aheadAngle = Math.atan2(ahead.ty, ahead.tx);
+  const turn = normalizeAngle(aheadAngle - backAngle);
+
+  return { x, y, angle, turn, nx: base.nx, ny: base.ny, tx: base.tx, ty: base.ty };
 }
 
 function traceOffsetPath(ctx, track, offset) {
@@ -401,8 +409,13 @@ class RaceEngine {
       jumpPad: null,
       eventHistory: [],
       renderAngle: 0,
+      bodyLean: 0,
       animOffset: rand(0, Math.PI * 2),
-      runFrameFloat: rand(0, 3.999)
+      runFrameFloat: rand(0, 3.999),
+      runCyclePhase: rand(0, GAME_CONFIG.runCycleFrames - 0.001),
+      displayProgress: 0,
+      displayLift: 0,
+      jumpAnim: null
     }));
   }
 
@@ -470,6 +483,36 @@ class RaceEngine {
     this.checkJumpPadCollisions();
     this.handleScheduledEvent();
     this.checkFinish();
+    this.updateVisualState(dt);
+  }
+
+  updateVisualState(dt) {
+    for (const racer of this.racers) {
+      if (!Number.isFinite(racer.displayProgress)) racer.displayProgress = racer.progress;
+
+      const paused = racer.hardPauseUntil > this.elapsed;
+      const sprinting = racer.effects.some((effect) => ['finalSprint', 'tailwind', 'jumpSuccess', 'slipstream'].includes(effect.type) && effect.until > this.elapsed);
+      const runFps = paused ? 0 : (sprinting ? 9.8 : 7.2);
+      racer.runCyclePhase = (racer.runCyclePhase + dt * runFps) % GAME_CONFIG.runCycleFrames;
+
+      if (racer.jumpAnim) {
+        const anim = racer.jumpAnim;
+        const t = clamp((this.elapsed - anim.start) / (anim.end - anim.start), 0, 1);
+        const eased = easeOutCubic(t);
+        racer.displayProgress = lerp(anim.from, anim.to, eased);
+        racer.displayLift = Math.sin(t * Math.PI) * anim.arcHeight;
+        if (t >= 1) {
+          racer.displayProgress = anim.to;
+          racer.displayLift = 0;
+          racer.jumpAnim = null;
+        }
+        continue;
+      }
+
+      const follow = racer.finishedAt !== null ? 0.38 : 0.26;
+      racer.displayProgress = lerp(racer.displayProgress, racer.progress, follow);
+      racer.displayLift = lerp(racer.displayLift || 0, 0, 0.30);
+    }
   }
 
   updateRacers(dt) {
@@ -522,12 +565,22 @@ class RaceEngine {
 
       if (success) {
         pad.result = 'success';
-        racer.progress = Math.min(0.996, racer.progress + jumpPower);
+        const fromProgress = Number.isFinite(racer.displayProgress) ? racer.displayProgress : racer.progress;
+        const targetProgress = Math.min(0.996, racer.progress + jumpPower);
+        racer.progress = targetProgress;
+        racer.jumpAnim = {
+          from: fromProgress,
+          to: targetProgress,
+          start: this.elapsed,
+          end: this.elapsed + GAME_CONFIG.jumpVisualDuration,
+          arcHeight: clamp(18 + jumpPower * 420 + racer.stats.burst * 7, GAME_CONFIG.jumpArcMinPx, GAME_CONFIG.jumpArcMaxPx)
+        };
         this.addEffect(racer, 'jumpSuccess', 1.04 + racer.stats.burst * 0.05, 1.35);
         this.applyEvent('jumpSuccess', racer, { ignoreCooldown: true, noExtraEffect: true });
       } else {
         pad.result = 'fail';
         racer.hardPauseUntil = Math.max(racer.hardPauseUntil, this.elapsed + 0.55);
+        racer.displayLift = Math.max(racer.displayLift || 0, 8);
         this.addEffect(racer, 'jumpFail', 0.72, 1.45);
         this.applyEvent('jumpFail', racer, { ignoreCooldown: true, noExtraEffect: true });
       }
@@ -1646,7 +1699,8 @@ class GameApp {
   drawRacers(ctx, racers, track) {
     const now = this.engine?.elapsed || 0;
     for (const racer of racers) {
-      const p = getLanePoint(track, racer.lane, racer.progress + racer.laneOffset);
+      const renderProgress = Number.isFinite(racer.displayProgress) ? racer.displayProgress : racer.progress;
+      const p = getLanePoint(track, racer.lane, renderProgress + racer.laneOffset);
       racer.lastPosition = p;
       racer.trail.push({
         x: p.x,
@@ -1692,34 +1746,36 @@ class GameApp {
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
 
-    // Lam muot huong quay de khi vao doan dao chieu, dau nhan vat van huong theo chieu chay,
-    // tranh cam giac "chong dit len troi" vi xoay giat cuc nhanh.
+    // Xoay than theo chieu chay va them do nghieng nhe khi om cua.
     const targetAngle = p.angle;
     if (!Number.isFinite(racer.renderAngle)) racer.renderAngle = targetAngle;
-    racer.renderAngle = lerpAngle(racer.renderAngle, targetAngle, paused ? 0.16 : 0.24);
+    racer.renderAngle = lerpAngle(racer.renderAngle, targetAngle, paused ? 0.18 : 0.28);
+    const targetLean = clamp(p.turn * 4.8, -0.28, 0.28);
+    racer.bodyLean = lerp(racer.bodyLean || 0, targetLean, paused ? 0.10 : 0.22);
 
-    // Lam muot chuyen dong bang cach noi suy giua 2 frame lien ke thay vi nhay frame dot ngot.
-    const runSpeed = paused ? 0 : (this.hasEffect(racer, 'finalSprint') ? 13.0 : this.hasEffect(racer, 'tailwind') || this.hasEffect(racer, 'jumpSuccess') ? 11.5 : 9.0);
-    racer.runFrameFloat = (racer.runFrameFloat + (runSpeed * (1 / 60))) % 4;
-    const frameFloat = paused ? 0 : (racer.runFrameFloat + racer.animOffset * 0.18 + now * 0.25) % 4;
+    // Chu ky chay ao 8 frame: noi suy frame 4 goc theo nhieu pha hon de nhin muot hon.
+    const frameFloat = paused ? 0 : (racer.runCyclePhase / 2);
     const frameA = Math.floor(frameFloat) % 4;
     const frameB = (frameA + 1) % 4;
     const blend = frameFloat - Math.floor(frameFloat);
     const imgA = this.imageCache.get(racer.character.frames[frameA]);
     const imgB = this.imageCache.get(racer.character.frames[frameB]);
 
-    const bob = paused ? 0 : Math.sin(now * 9 + racer.animOffset) * 1.6;
-    const strideScale = paused ? 1 : 1 + Math.sin(frameFloat * Math.PI * 2) * 0.018;
+    const bob = paused ? 0 : Math.sin(now * 8 + racer.animOffset) * 1.3;
+    const strideWave = Math.sin((racer.runCyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2);
+    const strideScaleX = 1 + Math.abs(strideWave) * 0.025;
+    const strideScaleY = 1 - Math.abs(strideWave) * 0.018;
 
     ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(racer.renderAngle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.08 : 0));
-    ctx.scale(strideScale, paused ? 0.97 : 1);
+    ctx.translate(p.x, p.y - (racer.displayLift || 0));
+    ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.08 : 0));
+    ctx.transform(1, 0, racer.bodyLean * 0.22, 1, 0, 0);
+    ctx.scale(strideScaleX, paused ? 0.97 : strideScaleY);
     if (paused) ctx.scale(1.04, 0.94);
 
     ctx.fillStyle = 'rgba(0,0,0,0.18)';
     ctx.beginPath();
-    ctx.ellipse(0, drawBox * 0.35, drawBox * 0.28, drawBox * 0.09, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, drawBox * 0.35 + (racer.displayLift || 0) * 0.08, drawBox * 0.28, drawBox * 0.09, 0, 0, Math.PI * 2);
     ctx.fill();
 
     const drawX = -drawBox / 2;
@@ -1750,17 +1806,17 @@ class GameApp {
     const label = racer.name.length > 8 ? `${racer.name.slice(0, 8)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(18,55,42,0.84)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 6, p.y + drawBox * 0.31, textWidth + 12, 18, 8);
+    this.roundRect(ctx, p.x - textWidth / 2 - 6, p.y + drawBox * 0.31 - (racer.displayLift || 0), textWidth + 12, 18, 8);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
-    ctx.fillText(label, p.x, p.y + drawBox * 0.31 + 3);
+    ctx.fillText(label, p.x, p.y + drawBox * 0.31 + 3 - (racer.displayLift || 0));
     ctx.restore();
   }
 
   drawFullDuck(ctx, racer, size, frameIndex, now) {
     const paletteIndex = Number((racer.character.id || 'nv01').replace('nv', '')) - 1;
     const palette = DUCK_PALETTES[((paletteIndex % DUCK_PALETTES.length) + DUCK_PALETTES.length) % DUCK_PALETTES.length];
-    const phase = (frameIndex % 4) / 4;
+    const phase = (frameIndex % 8) / 8;
     const legSwing = Math.sin(phase * Math.PI * 2) * size * 0.28;
     const ribbonWave = Math.sin(now * 10 + racer.index) * size * 0.06;
 
