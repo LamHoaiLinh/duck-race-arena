@@ -1240,6 +1240,7 @@ class GameApp {
     this.drawMapBackground(ctx, width, height, map);
     this.trackGeometry = buildTrackGeometry(width, height, laneCount, map);
     this.drawCircuitTrack(ctx, this.trackGeometry, map);
+    this.drawDirectionSigns(ctx, this.trackGeometry);
 
     if (this.engine) {
       this.drawJumpPads(ctx, this.engine.racers, this.trackGeometry);
@@ -1387,6 +1388,53 @@ class GameApp {
     ctx.fillStyle = '#FFFFFF';
     ctx.font = '900 13px system-ui, sans-serif';
     ctx.fillText('FINISH', base.x + t.x * 30, base.y + t.y * 30);
+  }
+
+
+  drawDirectionSigns(ctx, track) {
+    const signSpecs = [
+      { progress: 0.08, side: 1 },
+      { progress: 0.27, side: -1 },
+      { progress: 0.46, side: 1 },
+      { progress: 0.66, side: -1 },
+      { progress: 0.84, side: 1 }
+    ];
+    signSpecs.forEach((spec) => {
+      const base = sampleTrack(track, spec.progress);
+      const offset = track.trackWidth / 2 + 34;
+      const x = base.x + base.nx * offset * spec.side;
+      const y = base.y + base.ny * offset * spec.side;
+      let angle = Math.atan2(base.ty, base.tx);
+      if (spec.side < 0) angle += Math.PI;
+      this.drawRoadsideArrow(ctx, x, y, angle);
+    });
+  }
+
+  drawRoadsideArrow(ctx, x, y, angle) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.shadowColor = 'rgba(0,0,0,0.18)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 3;
+    ctx.fillStyle = '#1785D8';
+    this.roundRect(ctx, -23, -12, 46, 24, 8);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.moveTo(-10, -4);
+    ctx.lineTo(4, -4);
+    ctx.lineTo(4, -8);
+    ctx.lineTo(16, 0);
+    ctx.lineTo(4, 8);
+    ctx.lineTo(4, 4);
+    ctx.lineTo(-10, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#1067A8';
+    ctx.fillRect(-18, 12, 5, 12);
+    ctx.fillRect(13, 12, 5, 12);
+    ctx.restore();
   }
 
   drawJumpPads(ctx, racers, track) {
@@ -1611,8 +1659,9 @@ class GameApp {
   }
 
   drawRacerSprite(ctx, racer, p, now) {
-    const size = clamp(27 - this.engine.racers.length * 0.45, 17, 23);
-    const spriteSize = size * 2.05;
+    const size = clamp(22 - this.engine.racers.length * 0.32, 14, 18);
+    const spriteW = size * 2.05;
+    const spriteH = size * 2.2;
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
     const frameIndex = paused ? 0 : Math.floor(((now * 8) + racer.index * 0.7) % 4);
@@ -1621,16 +1670,16 @@ class GameApp {
 
     ctx.save();
     ctx.translate(p.x, p.y);
-    ctx.rotate(p.angle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.12 : 0));
-    if (paused) ctx.scale(1.06, 0.9);
+    ctx.rotate(p.angle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.10 : 0));
+    if (paused) ctx.scale(1.05, 0.92);
 
-    ctx.fillStyle = 'rgba(0,0,0,0.20)';
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
     ctx.beginPath();
-    ctx.ellipse(0, size * 0.78, size * 0.62, size * 0.16, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, size * 0.86, size * 0.55, size * 0.15, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (img && img.complete) {
-      ctx.drawImage(img, -spriteSize / 2, -spriteSize / 2, spriteSize, spriteSize);
+      ctx.drawImage(img, -spriteW / 2, -spriteH / 2 - size * 0.08, spriteW, spriteH);
     } else {
       ctx.fillStyle = '#FFFFFF';
       ctx.beginPath();
@@ -1640,7 +1689,7 @@ class GameApp {
       ctx.lineWidth = 3;
       ctx.stroke();
       ctx.fillStyle = '#12372A';
-      ctx.font = '900 10px system-ui, sans-serif';
+      ctx.font = '900 9px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(racer.character.label, 0, 0);
@@ -1648,16 +1697,16 @@ class GameApp {
     ctx.restore();
 
     ctx.save();
-    ctx.font = '800 11px system-ui, sans-serif';
+    ctx.font = '800 10px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const label = racer.name.length > 10 ? `${racer.name.slice(0, 10)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(18,55,42,0.82)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 6, p.y + size + 4, textWidth + 12, 18, 9);
+    this.roundRect(ctx, p.x - textWidth / 2 - 5, p.y + size + 2, textWidth + 10, 16, 8);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
-    ctx.fillText(label, p.x, p.y + size + 7);
+    ctx.fillText(label, p.x, p.y + size + 5);
     ctx.restore();
   }
 

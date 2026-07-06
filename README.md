@@ -16,3 +16,7 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 ## Cách chạy
 - Mo `index.html` bang trinh duyet.
 - Hoac deploy len GitHub Pages / Vercel / Netlify dang static site.
+
+- Da bo badge ky thuat RAM only/Reload = Reset.
+- Da them bien mui ten chi huong chay ben le duong dua.
+- Da thu nho va can giua sprite de nhan vat hien full body tren duong dua thay vi bi crop sat.
