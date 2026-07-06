@@ -25,3 +25,5 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 
 - Ban cuoi da thay renderer nhan vat tren duong dua bang vector full-body, khong con phu thuoc frame crop sat mat.
 - Da xoa han badge RAM only / Reload = Reset khoi giao dien.
+
+- Da giam khung/hien thi nhan vat tren duong dua xuong xap xi mot nua de tranh che nhau; kich thuoc hien thi thuc te nho hon ro ret (gan muc ~128x128 tinh theo y tuong anh yeu cau).

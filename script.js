@@ -1679,35 +1679,35 @@ class GameApp {
   }
 
   drawRacerSprite(ctx, racer, p, now) {
-    const size = clamp(18 - this.engine.racers.length * 0.22, 12, 15);
+    const size = clamp(9.5 - this.engine.racers.length * 0.12, 6.5, 8.5);
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
     const frameIndex = paused ? 0 : Math.floor(((now * 8) + racer.index * 0.7) % 4);
 
     ctx.save();
     ctx.translate(p.x, p.y);
-    ctx.rotate(p.angle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.08 : 0));
+    ctx.rotate(p.angle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.07 : 0));
     if (paused) ctx.scale(1.03, 0.95);
 
-    ctx.fillStyle = 'rgba(0,0,0,0.14)';
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
     ctx.beginPath();
-    ctx.ellipse(0, size * 0.92, size * 0.58, size * 0.14, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, size * 0.92, size * 0.54, size * 0.12, 0, 0, Math.PI * 2);
     ctx.fill();
 
     this.drawFullDuck(ctx, racer, size, frameIndex, now);
     ctx.restore();
 
     ctx.save();
-    ctx.font = '800 9px system-ui, sans-serif';
+    ctx.font = '800 8px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    const label = racer.name.length > 8 ? `${racer.name.slice(0, 8)}…` : racer.name;
+    const label = racer.name.length > 7 ? `${racer.name.slice(0, 7)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(18,55,42,0.82)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 4, p.y + size + 2, textWidth + 8, 14, 7);
+    this.roundRect(ctx, p.x - textWidth / 2 - 4, p.y + size + 1, textWidth + 8, 12, 6);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
-    ctx.fillText(label, p.x, p.y + size + 4);
+    ctx.fillText(label, p.x, p.y + size + 3);
     ctx.restore();
   }
 
