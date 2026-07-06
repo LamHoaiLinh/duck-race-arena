@@ -33,3 +33,6 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 - Da sua vach dich thanh 1 duong ke duy nhat.
 
 - Da sua huong bien mui ten: mui ten gio se chi dung theo chieu chay thuc te cua duong dua, khong con co bien chi nguoc chieu.
+
+- Da tang kich thuoc nhan vat tren duong dua len xap xi gap doi so voi ban truoc de de theo doi hon.
+- Da zoom khung duong dua sat vao hon bang cach giam padding quanh map, giup quan sat gay can hon.
