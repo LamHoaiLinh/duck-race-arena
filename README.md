@@ -1,86 +1,68 @@
 # Mint Duck Race Arena
 
-Web game casual chay truc tiep tren trinh duyet, khong backend, khong database, khong dang nhap, khong luu du lieu. Moi van dua chi ton tai trong RAM cua trinh duyet. Reload trang la reset toan bo.
+Web game tĩnh chạy trực tiếp trên trình duyệt bằng HTML5, CSS3, JavaScript thuần và Canvas API.
 
-## Cau truc file
+## Điểm chính
 
-```txt
-mint-duck-race-arena/
-├── index.html
-├── styles.css
-├── script.js
-├── assets/
-│   ├── animals/
-│   ├── maps/
-│   └── icons/
-└── README.md
+- Không backend.
+- Không database.
+- Không đăng nhập.
+- Không localStorage.
+- Trạng thái ván đua chỉ nằm trong RAM trình duyệt. Reload trang là reset.
+- Mỗi người chơi được xếp một làn riêng như sân điền kinh.
+- Số làn sinh tự động theo số người chơi, tối thiểu 2 và tối đa 12.
+- Màu đường đua lấy theo ảnh mẫu: xanh tím `#6F71B0`, viền đậm `#3A3761`, vạch trắng `#EAECF8`.
+- Có logic race engine gồm chỉ số ẩn, sự kiện 2-4 giây/lần, đường tắt, cản nhau, slipstream, rubber-band nhẹ, final sprint và xác suất 15% có tối đa 2 người cán đích đồng thời.
+
+## Cấu trúc file
+
+```text
+index.html
+styles.css
+script.js
+assets/
+  animals/
+  maps/
+  icons/
+README.md
 ```
 
-## Tinh nang da co
+## Cách chạy
 
-- HTML5, CSS3, JavaScript thuan, Canvas API.
-- Giao dien mint green cao cap, vui, sach, bo goc lon.
-- Desktop: duong dua o giua/ben trai, bang xep hang ben phai.
-- Man hinh nho: tu dong xep doc, khong tran chu.
-- Nhap 2 den 12 nguoi choi, moi dong 1 nguoi.
-- Nut mau nhanh 3 nguoi, 5 nguoi, 8 nguoi.
-- 5 map duong dua co vong bau duc, doan hep va nhanh tat.
-- Moi tay dua co chi so an: baseSpeed, burst, stability, luck, courage.
-- Su kien dua: gio nguoc, gio xuoi, vap nhe, truot cua, bi chan duong, chen lan, du bam, but toc, re tat, thoat hiem, ket nhanh hep.
-- Bang xep hang realtime, co animation khi doi thu hang.
-- Bubble su co hien gan con vat tren canvas.
-- Vet motion nho khi but toc.
-- Khung binh luan truc tiep dang ticker the thao.
-- Man ket qua top 1, top 2, top 3.
-- Confetti nhe khi ket thuc van.
+Mở trực tiếp file `index.html` bằng trình duyệt Chrome, Edge hoặc Firefox.
 
-## Chay truc tiep
+## Cách deploy GitHub Pages
 
-Chi can mo file `index.html` bang trinh duyet. Khong can cai Node, khong can npm, khong can backend.
+1. Giải nén file ZIP.
+2. Vào GitHub và tạo repository mới, ví dụ `mint-duck-race-arena`.
+3. Bấm `Add file` > `Upload files`.
+4. Kéo toàn bộ file và thư mục sau khi giải nén lên repository. Lưu ý `index.html` phải nằm ngay thư mục gốc repository, không để lồng trong thư mục con.
+5. Bấm `Commit changes`.
+6. Vào `Settings` > `Pages`.
+7. Ở `Build and deployment`, chọn `Deploy from a branch`.
+8. Chọn branch `main`, folder `/root`, rồi bấm `Save`.
+9. Đợi GitHub cấp link dạng `https://ten-tai-khoan.github.io/ten-repository/`.
 
-## Cach thay asset that sau nay
+## Cách deploy Render Static Site
 
-Thu muc `assets/animals/` da co placeholder SVG. Anh co the thay bang PNG/SVG that, giu dung ten file de game tu nap:
+1. Đưa toàn bộ mã nguồn lên GitHub repository.
+2. Vào Render, chọn `New` > `Static Site`.
+3. Kết nối repository vừa tạo.
+4. Build Command: để trống.
+5. Publish Directory: nhập `.`.
+6. Bấm `Create Static Site`.
 
-```txt
-assets/animals/duck.svg
-assets/animals/turtle.svg
-assets/animals/rabbit.svg
-assets/animals/frog.svg
-...
-```
+## Chỉnh thông số game
 
-Neu khong co file asset, game van tu fallback sang emoji tren canvas.
+Mở `script.js` và chỉnh các vùng sau:
 
-## Huong dan upload GitHub Pages bang giao dien web
+- `ANIMAL_DATA`: danh sách con vật, emoji, màu đại diện.
+- `MAP_DATA`: dữ liệu map, đường tắt, đoạn hẹp, đoạn cua, độ rủi ro.
+- `EVENT_COMMENTS`: câu bình luận tiếng Việt cho từng sự kiện.
+- `createHiddenStats()`: cách sinh chỉ số ẩn.
+- `getRubberBandMultiplier()`: mức cân bằng để không bỏ xa quá sớm.
+- `triggerRaceEvent()`: trọng số sự kiện.
 
-1. Giai nen file ZIP nay.
-2. Vao GitHub va tao repository moi, vi du: `mint-duck-race-arena`.
-3. Trong repository, bam **Add file** > **Upload files**.
-4. Keo tha toan bo file va thu muc ben trong folder da giai nen len GitHub. Luu y: `index.html` phai nam ngay o thu muc goc repository, khong nam long trong mot folder con.
-5. Bam **Commit changes**.
-6. Vao tab **Settings** cua repository.
-7. Vao muc **Pages**.
-8. Tai **Build and deployment**, chon **Deploy from a branch**.
-9. Chon branch `main`, folder `/root`, bam **Save**.
-10. Doi GitHub cap link Pages. Link thuong co dang:
+## Thay asset thật
 
-```txt
-https://ten-tai-khoan.github.io/mint-duck-race-arena/
-```
-
-## Huong dan deploy Render Static Site neu can
-
-1. Day code len GitHub truoc.
-2. Vao Render > New > Static Site.
-3. Chon repository `mint-duck-race-arena`.
-4. Build command: de trong.
-5. Publish directory: `.`
-6. Bam Create Static Site.
-
-## Ghi chu van hanh
-
-- Game khong co backend nen khong luu ket qua.
-- Reload trang la reset van dua.
-- Neu them nhieu anh PNG nang, nen toi uu kich thuoc anh de canvas khong bi giat.
-- De chinh do gay can, mo `script.js` va sua bien `CONFIG` o dau file.
+Hiện game đang dùng emoji/placeholder để nhẹ và dễ chạy. Sau này có thể thay bằng PNG trong `assets/animals/`. Khi thay thật, nên preload ảnh trong `script.js` trước khi vẽ Canvas để tránh giật khung hình.
