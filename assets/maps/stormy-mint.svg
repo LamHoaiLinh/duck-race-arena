@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
-  <rect width="800" height="450" rx="44" fill="#ECFFF7"/>
-  <ellipse cx="400" cy="225" rx="285" ry="145" fill="none" stroke="#9CF3DA" stroke-width="54"/>
-  <ellipse cx="400" cy="225" rx="285" ry="145" fill="none" stroke="#ffffff" stroke-width="6" stroke-dasharray="18 20"/>
-  <path d="M260 118 C360 45 510 390 610 300" fill="none" stroke="#FACC15" stroke-width="34" stroke-linecap="round" opacity="0.8"/>
-  <text x="400" y="225" text-anchor="middle" font-size="42" font-family="Arial" font-weight="900" fill="#12372A">Map 5</text>
-</svg>
