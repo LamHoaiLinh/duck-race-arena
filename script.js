@@ -1758,25 +1758,36 @@ class GameApp {
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
 
-    const targetAngle = Number.isFinite(p.angle) ? p.angle : 0;
+    const rawAngle = Number.isFinite(p.angle) ? p.angle : 0;
+
+    // Giu nhan vat dung huong chay nhung tranh bi lat nguoc lam nhin nhu "chong dit len troi".
+    // Khi huong chay nghieng ve ben trai, ta lat sprite theo truc ngang va dua goc ve vung dang nhin.
+    const shouldFlip = Math.cos(rawAngle) < 0;
+    const targetAngle = shouldFlip ? normalizeAngle(rawAngle + Math.PI) : rawAngle;
+    const flipX = shouldFlip ? -1 : 1;
+
     if (!Number.isFinite(racer.renderAngle)) racer.renderAngle = targetAngle;
     racer.renderAngle = lerpAngle(racer.renderAngle, targetAngle, paused ? 0.16 : 0.24);
 
-    const targetLean = clamp((p.turn || 0) * 4.2, -0.24, 0.24);
+    const targetLean = clamp((p.turn || 0) * 3.8, -0.20, 0.20);
     racer.bodyLean = lerp(racer.bodyLean || 0, targetLean, paused ? 0.10 : 0.18);
 
     const cyclePhase = Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0;
-    const frameIndex = paused ? 0 : (Math.floor(cyclePhase / 2) % 4);
-    const safeFrameIndex = Number.isFinite(frameIndex) ? frameIndex : 0;
-    const framePath = racer.character.frames[safeFrameIndex] || racer.character.frames[0];
-    const img = this.imageCache.get(framePath);
+    const virtualFrame = paused ? 0 : (cyclePhase / 2);
+    const baseFrame = Math.floor(virtualFrame) % 4;
+    const nextFrame = (baseFrame + 1) % 4;
+    const blend = paused ? 0 : (virtualFrame - Math.floor(virtualFrame));
+    const framePathA = racer.character.frames[baseFrame] || racer.character.frames[0];
+    const framePathB = racer.character.frames[nextFrame] || racer.character.frames[0];
+    const imgA = this.imageCache.get(framePathA);
+    const imgB = this.imageCache.get(framePathB);
     const bob = paused ? 0 : Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 1.8;
     const stride = paused ? 1 : 1 + Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 0.035;
 
     ctx.save();
     ctx.translate(p.x, p.y - (racer.displayLift || 0));
     ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.08 : 0));
-    ctx.scale(stride, paused ? 0.96 : (1 - Math.abs(racer.bodyLean) * 0.08));
+    ctx.scale(flipX * stride, paused ? 0.96 : (1 - Math.abs(racer.bodyLean) * 0.08));
     if (paused) ctx.scale(1.04, 0.94);
 
     ctx.fillStyle = 'rgba(0,0,0,0.18)';
@@ -1784,11 +1795,24 @@ class GameApp {
     ctx.ellipse(0, drawBox * 0.35 + (racer.displayLift || 0) * 0.08, drawBox * 0.28, drawBox * 0.09, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    if (img && img.complete) {
-      ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 6 + bob, drawBox, drawBox);
-    } else {
+    const drawX = -drawBox / 2;
+    const drawY = -drawBox / 2 - 6 + bob;
+    if (imgA && imgA.complete) {
+      ctx.save();
+      ctx.globalAlpha = paused ? 1 : (1 - blend);
+      ctx.drawImage(imgA, drawX, drawY, drawBox, drawBox);
+      ctx.restore();
+    }
+    if (!paused && imgB && imgB.complete) {
+      ctx.save();
+      ctx.globalAlpha = blend;
+      ctx.drawImage(imgB, drawX, drawY, drawBox, drawBox);
+      ctx.restore();
+    }
+
+    if ((!imgA || !imgA.complete) && (!imgB || !imgB.complete)) {
       const size = clamp(62 - this.engine.racers.length * 0.56, 36, 48);
-      this.drawFullDuck(ctx, racer, size, safeFrameIndex, now);
+      this.drawFullDuck(ctx, racer, size, baseFrame, now);
     }
     ctx.restore();
 

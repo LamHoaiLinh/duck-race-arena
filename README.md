@@ -46,3 +46,6 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 
 - Ban sua loi console: bo sung normalizeAngle/lerpAngle/easeOutCubic va config animation bi thieu, de nhan vat hien lai sau khi bam bat dau.
 - Da giu hieu ung nghieng than khi om cua va bat nhay muot hon nhung dam bao khong mat nhan vat.
+
+- Da sua huong xoay sprite de tranh hien tuong nhan vat bi lat nguoc/chong dit len troi khi vao doan dao chieu.
+- Da lam sach sprite, loai bo lop dom dom/checkerboard quanh nhan vat bang cach loc alpha thap.
