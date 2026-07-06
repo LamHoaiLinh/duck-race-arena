@@ -12,7 +12,7 @@
       <div class="title-block">
         <span class="eyebrow">Casual Web Game</span>
         <h1>Mint Duck Race Arena</h1>
-        <p>Đường đua xanh tím tách làn, mỗi người một lane, bệ bật nhảy rải rác, gió/lốc/đá hiển thị rõ và sự kiện diễn ra chậm để dễ theo dõi.</p>
+        <p>Đường đua casual sắc nét, map uốn éo đa dạng, sự kiện fair play và hỗ trợ chọn nhân vật thủ công hoặc tự động.</p>
       </div>
       <div class="status-badge" title="Game khong luu du lieu">
         <span>RAM only</span>
@@ -22,13 +22,14 @@
 
     <section class="top-control card">
       <div class="names-box">
-        <label for="playerNames">Tên người chơi <small>mỗi dòng một người, 2 đến 12 người</small></label>
+        <label for="playerNames">Tên người chơi <small>Mỗi dòng một người, từ 2 đến 12 người</small></label>
         <textarea id="playerNames" spellcheck="false">Khải
 Lan
 Tùng
 Minh
 Vy
 Huy</textarea>
+        <button type="button" id="toggleCustomizerBtn" class="soft-btn full-btn">Tùy chỉnh nhân vật</button>
       </div>
       <div class="settings-box">
         <div class="quick-row">
@@ -52,20 +53,46 @@ Huy</textarea>
       </div>
     </section>
 
+    <section id="characterCustomizer" class="character-customizer card" hidden>
+      <div class="panel-head">
+        <div>
+          <h2>Tùy chỉnh nhân vật</h2>
+          <p>Mặc định game tự chia nhân vật ngẫu nhiên. Anh có thể chọn riêng cho từng người hoặc áp cho cả nhóm.</p>
+        </div>
+      </div>
+      <div class="customizer-grid">
+        <div class="customizer-left">
+          <div class="global-assign-row">
+            <label for="globalCharacterSelect">Áp cho tất cả</label>
+            <div class="global-assign-inline">
+              <select id="globalCharacterSelect"></select>
+              <button type="button" id="applyAllCharactersBtn" class="soft-btn">Áp dụng</button>
+              <button type="button" id="setAllAutoBtn" class="soft-btn">Tự động hết</button>
+            </div>
+          </div>
+          <div id="playerCharacterRows" class="player-character-rows"></div>
+        </div>
+        <div class="customizer-right">
+          <h3>Thư viện nhân vật</h3>
+          <div id="characterGallery" class="character-gallery"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="main-grid">
       <section class="arena-panel card">
         <div class="panel-head">
           <div>
-            <h2 id="raceTitle">Sân Mint Violet</h2>
-            <p id="raceMeta">Mỗi tay đua có một làn riêng. Chạm vạch đích mới tính kết quả.</p>
+            <h2 id="raceTitle">Mint Corkscrew</h2>
+            <p id="raceMeta">Map uốn éo nhiều cua, mỗi người một lane, bệ bật nhảy rải rác công bằng.</p>
           </div>
           <div class="timer-pill" id="timerText">30.0s</div>
         </div>
         <div class="canvas-frame">
-          <canvas id="raceCanvas" width="1200" height="680" aria-label="Đường đua"></canvas>
+          <canvas id="raceCanvas" width="1280" height="720" aria-label="Đường đua"></canvas>
         </div>
         <div class="ticker" id="commentaryTicker">
-          <span>Nhập tên người chơi rồi bấm Bắt đầu.</span>
+          <span>Nhập tên người chơi, tùy chỉnh nhân vật nếu muốn rồi bấm Bắt đầu.</span>
         </div>
       </section>
 
@@ -73,13 +100,13 @@ Huy</textarea>
         <div class="panel-head rank-head">
           <div>
             <h2>Bảng xếp hạng</h2>
-            <p>Realtime, chữ lớn, tự nhảy nhẹ khi đổi hạng.</p>
+            <p>Realtime, đổi hạng sẽ nhảy nhẹ.</p>
           </div>
         </div>
         <ol id="rankingList" class="ranking-list"></ol>
         <div class="logic-note">
-          <strong>Nhịp sự kiện</strong>
-          <p>Mỗi sự kiện cách nhau chậm hơn, bình luận giữ tối thiểu khoảng 2 giây. Mỗi lane có 1 bệ bật nhảy ngẫu nhiên để bảo đảm fair play.</p>
+          <strong>Luật đua</strong>
+          <p>Sự kiện diễn ra chậm khoảng vài giây một lần để dễ đọc. Người chạm vạch đích mới được tính là người về trước.</p>
         </div>
       </aside>
     </section>
@@ -89,7 +116,7 @@ Huy</textarea>
     <section class="result-card">
       <button type="button" id="closeResultBtn" class="close-btn" aria-label="Đóng">×</button>
       <span class="eyebrow">Kết quả cuộc đua</span>
-      <h2>Hạng 1 - Hạng 2 - Hạng 3</h2>
+      <h2>Kết quả chung cuộc</h2>
       <div id="podium" class="podium"></div>
       <button type="button" id="playAgainBigBtn" class="primary-btn big-action">Chơi lượt mới</button>
     </section>
