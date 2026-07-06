@@ -1760,11 +1760,10 @@ class GameApp {
 
     const rawAngle = Number.isFinite(p.angle) ? p.angle : 0;
 
-    // Giu nhan vat dung huong chay nhung tranh bi lat nguoc lam nhin nhu "chong dit len troi".
-    // Khi huong chay nghieng ve ben trai, ta lat sprite theo truc ngang va dua goc ve vung dang nhin.
-    const shouldFlip = Math.cos(rawAngle) < 0;
-    const targetAngle = shouldFlip ? normalizeAngle(rawAngle + Math.PI) : rawAngle;
-    const flipX = shouldFlip ? -1 : 1;
+    // Luon giu sprite o tu the "dung nguoi", khong xoay lat nguoc 180 do.
+    // Neu xe chay ve ben trai thi lat ngang sprite, con goc xoay chi giu trong mien -90..90 do.
+    const flipX = Math.cos(rawAngle) < 0 ? -1 : 1;
+    const targetAngle = Math.atan2(Math.sin(rawAngle), Math.abs(Math.cos(rawAngle)));
 
     if (!Number.isFinite(racer.renderAngle)) racer.renderAngle = targetAngle;
     racer.renderAngle = lerpAngle(racer.renderAngle, targetAngle, paused ? 0.16 : 0.24);
@@ -1786,7 +1785,7 @@ class GameApp {
 
     ctx.save();
     ctx.translate(p.x, p.y - (racer.displayLift || 0));
-    ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.08 : 0));
+    ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.045 : 0));
     ctx.scale(flipX * stride, paused ? 0.96 : (1 - Math.abs(racer.bodyLean) * 0.08));
     if (paused) ctx.scale(1.04, 0.94);
 

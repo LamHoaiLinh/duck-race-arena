@@ -49,3 +49,6 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 
 - Da sua huong xoay sprite de tranh hien tuong nhan vat bi lat nguoc/chong dit len troi khi vao doan dao chieu.
 - Da lam sach sprite, loai bo lop dom dom/checkerboard quanh nhan vat bang cach loc alpha thap.
+
+- Da xu ly lai asset de xoa background o vuong/checkerboard con sot xung quanh nhan vat.
+- Da doi cong thuc huong sprite: nhan vat se lat ngang khi chay nguoc huong, nhung van giu than dung nguoi, tranh bi chong nguoc.
