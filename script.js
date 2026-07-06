@@ -45,6 +45,26 @@ const CHARACTER_DATA = Array.from({ length: 16 }, (_, i) => {
   };
 });
 
+
+const DUCK_PALETTES = [
+  { body: '#FFD84A', wing: '#F2BC18', beak: '#F28C1B', band: '#EF4444', outline: '#8C4E11' },
+  { body: '#FFF8E7', wing: '#E5DED1', beak: '#F49B22', band: '#14B8A6', outline: '#6E6255' },
+  { body: '#B8793C', wing: '#8B5A2B', beak: '#E0892D', band: '#60A5FA', outline: '#5F3D1E' },
+  { body: '#7FD14A', wing: '#56A82D', beak: '#ED9A23', band: '#FACC15', outline: '#35631E' },
+  { body: '#69A8FF', wing: '#4388EA', beak: '#F59D28', band: '#1D4ED8', outline: '#214A7A' },
+  { body: '#FFA4D1', wing: '#F176B5', beak: '#F78F24', band: '#FB7185', outline: '#8A3A66' },
+  { body: '#393E46', wing: '#1E2127', beak: '#F4A124', band: '#A855F7', outline: '#111317' },
+  { body: '#FFAA45', wing: '#F2821D', beak: '#D96B10', band: '#F97316', outline: '#8A420C' },
+  { body: '#D7C3A0', wing: '#B69569', beak: '#F4971C', band: '#22C55E', outline: '#6E5535' },
+  { body: '#A6F3D0', wing: '#72D8B2', beak: '#F2A028', band: '#0EA5E9', outline: '#317461' },
+  { body: '#FDE68A', wing: '#F5CF58', beak: '#E88D14', band: '#DC2626', outline: '#8A6311' },
+  { body: '#C4B5FD', wing: '#A78BFA', beak: '#F49D27', band: '#7C3AED', outline: '#5B46A0' },
+  { body: '#F9A8D4', wing: '#EC4899', beak: '#F39A21', band: '#BE185D', outline: '#84385C' },
+  { body: '#86EFAC', wing: '#4ADE80', beak: '#F59E0B', band: '#16A34A', outline: '#3A7A4F' },
+  { body: '#D1D5DB', wing: '#9CA3AF', beak: '#F59E0B', band: '#334155', outline: '#56606D' },
+  { body: '#FDBA74', wing: '#FB923C', beak: '#EA7B16', band: '#0F766E', outline: '#93511F' }
+];
+
 const MAP_DATA = [
   {
     id: 'mint-corkscrew',
@@ -1659,41 +1679,22 @@ class GameApp {
   }
 
   drawRacerSprite(ctx, racer, p, now) {
-    const size = clamp(16 - this.engine.racers.length * 0.18, 10, 13);
-    const spriteW = size * 1.75;
-    const spriteH = size * 1.95;
+    const size = clamp(18 - this.engine.racers.length * 0.22, 12, 15);
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
     const frameIndex = paused ? 0 : Math.floor(((now * 8) + racer.index * 0.7) % 4);
-    const framePath = racer.character.frames[frameIndex];
-    const img = this.imageCache.get(framePath);
 
     ctx.save();
     ctx.translate(p.x, p.y);
     ctx.rotate(p.angle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.08 : 0));
-    if (paused) ctx.scale(1.04, 0.94);
+    if (paused) ctx.scale(1.03, 0.95);
 
-    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ctx.fillStyle = 'rgba(0,0,0,0.14)';
     ctx.beginPath();
-    ctx.ellipse(0, size * 0.82, size * 0.46, size * 0.12, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, size * 0.92, size * 0.58, size * 0.14, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    if (img && img.complete) {
-      ctx.drawImage(img, -spriteW / 2, -spriteH / 2 - size * 0.04, spriteW, spriteH);
-    } else {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.beginPath();
-      ctx.arc(0, 0, size * 0.62, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#2DD4BF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.fillStyle = '#12372A';
-      ctx.font = '900 8px system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(racer.character.label, 0, 0);
-    }
+    this.drawFullDuck(ctx, racer, size, frameIndex, now);
     ctx.restore();
 
     ctx.save();
@@ -1703,10 +1704,149 @@ class GameApp {
     const label = racer.name.length > 8 ? `${racer.name.slice(0, 8)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(18,55,42,0.82)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 4, p.y + size + 1, textWidth + 8, 14, 7);
+    this.roundRect(ctx, p.x - textWidth / 2 - 4, p.y + size + 2, textWidth + 8, 14, 7);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
-    ctx.fillText(label, p.x, p.y + size + 3);
+    ctx.fillText(label, p.x, p.y + size + 4);
+    ctx.restore();
+  }
+
+  drawFullDuck(ctx, racer, size, frameIndex, now) {
+    const paletteIndex = Number((racer.character.id || 'nv01').replace('nv', '')) - 1;
+    const palette = DUCK_PALETTES[((paletteIndex % DUCK_PALETTES.length) + DUCK_PALETTES.length) % DUCK_PALETTES.length];
+    const phase = (frameIndex % 4) / 4;
+    const legSwing = Math.sin(phase * Math.PI * 2) * size * 0.28;
+    const ribbonWave = Math.sin(now * 10 + racer.index) * size * 0.06;
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Tail
+    ctx.fillStyle = palette.body;
+    ctx.strokeStyle = palette.outline;
+    ctx.lineWidth = Math.max(1.2, size * 0.10);
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.55, -size * 0.10);
+    ctx.lineTo(-size * 0.92, -size * 0.38);
+    ctx.lineTo(-size * 0.84, -size * 0.02);
+    ctx.lineTo(-size * 1.02, size * 0.12);
+    ctx.lineTo(-size * 0.64, size * 0.08);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Back leg.
+    this.drawDuckLeg(ctx, -size * 0.12, size * 0.44, size, -legSwing, palette, 0.92);
+    // Front leg.
+    this.drawDuckLeg(ctx, size * 0.22, size * 0.44, size, legSwing, palette, 1.0);
+
+    // Body.
+    ctx.fillStyle = palette.body;
+    ctx.strokeStyle = palette.outline;
+    ctx.lineWidth = Math.max(1.2, size * 0.11);
+    ctx.beginPath();
+    ctx.ellipse(-size * 0.05, size * 0.06, size * 0.84, size * 0.64, 0.12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Wing.
+    ctx.fillStyle = palette.wing;
+    ctx.beginPath();
+    ctx.ellipse(-size * 0.06, size * 0.08, size * 0.36, size * 0.28, -0.42, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Head.
+    ctx.fillStyle = palette.body;
+    ctx.beginPath();
+    ctx.arc(size * 0.54, -size * 0.32, size * 0.42, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Hair tuft.
+    ctx.beginPath();
+    ctx.moveTo(size * 0.44, -size * 0.66);
+    ctx.quadraticCurveTo(size * 0.62, -size * 0.96, size * 0.76, -size * 0.62);
+    ctx.quadraticCurveTo(size * 0.68, -size * 0.82, size * 0.54, -size * 0.54);
+    ctx.fill();
+    ctx.stroke();
+
+    // Beak.
+    ctx.fillStyle = palette.beak;
+    ctx.beginPath();
+    ctx.moveTo(size * 0.76, -size * 0.24);
+    ctx.lineTo(size * 1.14, -size * 0.12);
+    ctx.lineTo(size * 0.78, size * 0.02);
+    ctx.quadraticCurveTo(size * 0.58, -size * 0.08, size * 0.76, -size * 0.24);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(size * 0.68, -size * 0.02);
+    ctx.quadraticCurveTo(size * 0.86, size * 0.04, size * 0.98, -size * 0.02);
+    ctx.stroke();
+
+    // Eye.
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(size * 0.56, -size * 0.36, size * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#1F2937';
+    ctx.beginPath();
+    ctx.arc(size * 0.58, -size * 0.34, size * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(size * 0.60, -size * 0.36, size * 0.025, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Headband.
+    ctx.fillStyle = palette.band;
+    ctx.strokeStyle = palette.outline;
+    ctx.lineWidth = Math.max(1.0, size * 0.08);
+    ctx.beginPath();
+    ctx.moveTo(size * 0.18, -size * 0.48);
+    ctx.quadraticCurveTo(size * 0.50, -size * 0.70, size * 0.84, -size * 0.52);
+    ctx.lineTo(size * 0.82, -size * 0.34);
+    ctx.quadraticCurveTo(size * 0.50, -size * 0.52, size * 0.24, -size * 0.34);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(size * 0.18, -size * 0.45);
+    ctx.lineTo(-size * 0.10, -size * 0.62 + ribbonWave);
+    ctx.lineTo(-size * 0.03, -size * 0.40 + ribbonWave);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(size * 0.24, -size * 0.39);
+    ctx.lineTo(-size * 0.01, -size * 0.18 + ribbonWave * 0.6);
+    ctx.lineTo(size * 0.08, -size * 0.04 + ribbonWave * 0.6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  drawDuckLeg(ctx, baseX, baseY, size, swing, palette, scale = 1) {
+    ctx.save();
+    ctx.translate(baseX, baseY);
+    ctx.strokeStyle = palette.beak;
+    ctx.fillStyle = palette.beak;
+    ctx.lineWidth = Math.max(1.1, size * 0.11 * scale);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(swing * 0.45, size * 0.34 * scale);
+    ctx.stroke();
+    const footX = swing * 0.45;
+    const footY = size * 0.34 * scale;
+    ctx.beginPath();
+    ctx.moveTo(footX - size * 0.14, footY + size * 0.03);
+    ctx.lineTo(footX + size * 0.07, footY + size * 0.03);
+    ctx.lineTo(footX + size * 0.14, footY + size * 0.12);
+    ctx.lineTo(footX - size * 0.02, footY + size * 0.12);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
 

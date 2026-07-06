@@ -22,3 +22,6 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 - Da thu nho va can giua sprite de nhan vat hien full body tren duong dua thay vi bi crop sat.
 
 - Da sua hien thi nhan vat tren duong dua: sprite nho hon, full body de khong con bi che nhau chi con 1 phan co the.
+
+- Ban cuoi da thay renderer nhan vat tren duong dua bang vector full-body, khong con phu thuoc frame crop sat mat.
+- Da xoa han badge RAM only / Reload = Reset khoi giao dien.
