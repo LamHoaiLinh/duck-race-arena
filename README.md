@@ -41,9 +41,5 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 
 - Da tang kich thuoc nhan vat hien thi tren duong dua len xap xi gap doi so voi ban truoc theo yeu cau cuoi cung.
 
-- Da sua huong quay nhan vat muot hon khi vao doan dao chieu, dau nhan vat se huong theo chieu chay tot hon va giam cam giac chong dit.
-- Da lam muot chuyen dong bang cach noi suy giua cac frame sprite de giam giat cuc.
-
-- Da tang do nghieng than khi om cua, nhan vat nghieng nhe theo huong cua de nhin song dong hon.
-- Da nang cap chu ky chay len kieu 8-pha (ao 8 frame) de animation muot hon.
-- Da sua cu nhay bat pha: nhan vat se bay qua va ha xuong muot hon, khong con bien mat o diem cu roi xuat hien dot ngot o diem moi.
+- Da sua lai ban cap nhat truoc de dam bao nhan vat hien thi on dinh tren duong dua.
+- Van giu do nghieng nhe khi om cua va cu bat nhay muot hon, nhung toi uu theo huong an toan hon de tranh mat nhan vat.

@@ -341,13 +341,9 @@ function getLanePoint(track, laneIndex, progress, extraShift = 0) {
   const x = base.x + base.nx * offset;
   const y = base.y + base.ny * offset;
   const angle = Math.atan2(base.ty, base.tx);
-
-  const back = sampleTrack(track, baseProgress - 0.0032);
-  const ahead = sampleTrack(track, baseProgress + 0.0032);
-  const backAngle = Math.atan2(back.ty, back.tx);
-  const aheadAngle = Math.atan2(ahead.ty, ahead.tx);
-  const turn = normalizeAngle(aheadAngle - backAngle);
-
+  const back = sampleTrack(track, baseProgress - 0.003);
+  const ahead = sampleTrack(track, baseProgress + 0.003);
+  const turn = normalizeAngle(Math.atan2(ahead.ty, ahead.tx) - Math.atan2(back.ty, back.tx));
   return { x, y, angle, turn, nx: base.nx, ny: base.ny, tx: base.tx, ty: base.ty };
 }
 
@@ -410,8 +406,6 @@ class RaceEngine {
       eventHistory: [],
       renderAngle: 0,
       bodyLean: 0,
-      animOffset: rand(0, Math.PI * 2),
-      runFrameFloat: rand(0, 3.999),
       runCyclePhase: rand(0, GAME_CONFIG.runCycleFrames - 0.001),
       displayProgress: 0,
       displayLift: 0,
@@ -489,29 +483,25 @@ class RaceEngine {
   updateVisualState(dt) {
     for (const racer of this.racers) {
       if (!Number.isFinite(racer.displayProgress)) racer.displayProgress = racer.progress;
-
       const paused = racer.hardPauseUntil > this.elapsed;
       const sprinting = racer.effects.some((effect) => ['finalSprint', 'tailwind', 'jumpSuccess', 'slipstream'].includes(effect.type) && effect.until > this.elapsed);
-      const runFps = paused ? 0 : (sprinting ? 9.8 : 7.2);
-      racer.runCyclePhase = (racer.runCyclePhase + dt * runFps) % GAME_CONFIG.runCycleFrames;
+      const fps = paused ? 0 : (sprinting ? 10 : 7.2);
+      racer.runCyclePhase = (racer.runCyclePhase + dt * fps) % GAME_CONFIG.runCycleFrames;
 
       if (racer.jumpAnim) {
         const anim = racer.jumpAnim;
         const t = clamp((this.elapsed - anim.start) / (anim.end - anim.start), 0, 1);
-        const eased = easeOutCubic(t);
-        racer.displayProgress = lerp(anim.from, anim.to, eased);
+        racer.displayProgress = anim.from + (anim.to - anim.from) * easeOutCubic(t);
         racer.displayLift = Math.sin(t * Math.PI) * anim.arcHeight;
         if (t >= 1) {
           racer.displayProgress = anim.to;
           racer.displayLift = 0;
           racer.jumpAnim = null;
         }
-        continue;
+      } else {
+        racer.displayProgress = lerp(racer.displayProgress, racer.progress, racer.finishedAt !== null ? 0.34 : 0.24);
+        racer.displayLift = lerp(racer.displayLift || 0, 0, 0.28);
       }
-
-      const follow = racer.finishedAt !== null ? 0.38 : 0.26;
-      racer.displayProgress = lerp(racer.displayProgress, racer.progress, follow);
-      racer.displayLift = lerp(racer.displayLift || 0, 0, 0.30);
     }
   }
 
@@ -566,21 +556,21 @@ class RaceEngine {
       if (success) {
         pad.result = 'success';
         const fromProgress = Number.isFinite(racer.displayProgress) ? racer.displayProgress : racer.progress;
-        const targetProgress = Math.min(0.996, racer.progress + jumpPower);
-        racer.progress = targetProgress;
+        const toProgress = Math.min(0.996, racer.progress + jumpPower);
+        racer.progress = toProgress;
         racer.jumpAnim = {
           from: fromProgress,
-          to: targetProgress,
+          to: toProgress,
           start: this.elapsed,
           end: this.elapsed + GAME_CONFIG.jumpVisualDuration,
-          arcHeight: clamp(18 + jumpPower * 420 + racer.stats.burst * 7, GAME_CONFIG.jumpArcMinPx, GAME_CONFIG.jumpArcMaxPx)
+          arcHeight: clamp(14 + jumpPower * 420, GAME_CONFIG.jumpArcMinPx, GAME_CONFIG.jumpArcMaxPx)
         };
         this.addEffect(racer, 'jumpSuccess', 1.04 + racer.stats.burst * 0.05, 1.35);
         this.applyEvent('jumpSuccess', racer, { ignoreCooldown: true, noExtraEffect: true });
       } else {
         pad.result = 'fail';
         racer.hardPauseUntil = Math.max(racer.hardPauseUntil, this.elapsed + 0.55);
-        racer.displayLift = Math.max(racer.displayLift || 0, 8);
+        racer.displayLift = Math.max(racer.displayLift || 0, 6);
         this.addEffect(racer, 'jumpFail', 0.72, 1.45);
         this.applyEvent('jumpFail', racer, { ignoreCooldown: true, noExtraEffect: true });
       }
@@ -1746,31 +1736,24 @@ class GameApp {
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
 
-    // Xoay than theo chieu chay va them do nghieng nhe khi om cua.
-    const targetAngle = p.angle;
+    const targetAngle = Number.isFinite(p.angle) ? p.angle : 0;
     if (!Number.isFinite(racer.renderAngle)) racer.renderAngle = targetAngle;
-    racer.renderAngle = lerpAngle(racer.renderAngle, targetAngle, paused ? 0.18 : 0.28);
-    const targetLean = clamp(p.turn * 4.8, -0.28, 0.28);
-    racer.bodyLean = lerp(racer.bodyLean || 0, targetLean, paused ? 0.10 : 0.22);
+    racer.renderAngle = lerpAngle(racer.renderAngle, targetAngle, paused ? 0.16 : 0.24);
 
-    // Chu ky chay ao 8 frame: noi suy frame 4 goc theo nhieu pha hon de nhin muot hon.
-    const frameFloat = paused ? 0 : (racer.runCyclePhase / 2);
-    const frameA = Math.floor(frameFloat) % 4;
-    const frameB = (frameA + 1) % 4;
-    const blend = frameFloat - Math.floor(frameFloat);
-    const imgA = this.imageCache.get(racer.character.frames[frameA]);
-    const imgB = this.imageCache.get(racer.character.frames[frameB]);
+    const targetLean = clamp((p.turn || 0) * 4.2, -0.24, 0.24);
+    racer.bodyLean = lerp(racer.bodyLean || 0, targetLean, paused ? 0.10 : 0.18);
 
-    const bob = paused ? 0 : Math.sin(now * 8 + racer.animOffset) * 1.3;
-    const strideWave = Math.sin((racer.runCyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2);
-    const strideScaleX = 1 + Math.abs(strideWave) * 0.025;
-    const strideScaleY = 1 - Math.abs(strideWave) * 0.018;
+    const cyclePhase = Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0;
+    const frameIndex = paused ? 0 : (Math.floor(cyclePhase / 2) % 4);
+    const framePath = racer.character.frames[frameIndex];
+    const img = this.imageCache.get(framePath);
+    const bob = paused ? 0 : Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 1.8;
+    const stride = paused ? 1 : 1 + Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 0.035;
 
     ctx.save();
     ctx.translate(p.x, p.y - (racer.displayLift || 0));
     ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.08 : 0));
-    ctx.transform(1, 0, racer.bodyLean * 0.22, 1, 0, 0);
-    ctx.scale(strideScaleX, paused ? 0.97 : strideScaleY);
+    ctx.scale(stride, paused ? 0.96 : (1 - Math.abs(racer.bodyLean) * 0.08));
     if (paused) ctx.scale(1.04, 0.94);
 
     ctx.fillStyle = 'rgba(0,0,0,0.18)';
@@ -1778,24 +1761,11 @@ class GameApp {
     ctx.ellipse(0, drawBox * 0.35 + (racer.displayLift || 0) * 0.08, drawBox * 0.28, drawBox * 0.09, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const drawX = -drawBox / 2;
-    const drawY = -drawBox / 2 - 6 + bob;
-    if (imgA && imgA.complete) {
-      ctx.save();
-      ctx.globalAlpha = paused ? 1 : (1 - blend);
-      ctx.drawImage(imgA, drawX, drawY, drawBox, drawBox);
-      ctx.restore();
-    }
-    if (!paused && imgB && imgB.complete) {
-      ctx.save();
-      ctx.globalAlpha = blend;
-      ctx.drawImage(imgB, drawX, drawY, drawBox, drawBox);
-      ctx.restore();
-    }
-
-    if ((!imgA || !imgA.complete) && (!imgB || !imgB.complete)) {
+    if (img && img.complete) {
+      ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 6 + bob, drawBox, drawBox);
+    } else {
       const size = clamp(62 - this.engine.racers.length * 0.56, 36, 48);
-      this.drawFullDuck(ctx, racer, size, frameA, now);
+      this.drawFullDuck(ctx, racer, size, frameIndex, now);
     }
     ctx.restore();
 
@@ -1805,18 +1775,19 @@ class GameApp {
     ctx.textBaseline = 'top';
     const label = racer.name.length > 8 ? `${racer.name.slice(0, 8)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
+    const labelY = p.y + drawBox * 0.31 - (racer.displayLift || 0);
     ctx.fillStyle = 'rgba(18,55,42,0.84)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 6, p.y + drawBox * 0.31 - (racer.displayLift || 0), textWidth + 12, 18, 8);
+    this.roundRect(ctx, p.x - textWidth / 2 - 6, labelY, textWidth + 12, 18, 8);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
-    ctx.fillText(label, p.x, p.y + drawBox * 0.31 + 3 - (racer.displayLift || 0));
+    ctx.fillText(label, p.x, labelY + 3);
     ctx.restore();
   }
 
   drawFullDuck(ctx, racer, size, frameIndex, now) {
     const paletteIndex = Number((racer.character.id || 'nv01').replace('nv', '')) - 1;
     const palette = DUCK_PALETTES[((paletteIndex % DUCK_PALETTES.length) + DUCK_PALETTES.length) % DUCK_PALETTES.length];
-    const phase = (frameIndex % 8) / 8;
+    const phase = (frameIndex % 4) / 4;
     const legSwing = Math.sin(phase * Math.PI * 2) * size * 0.28;
     const ribbonWave = Math.sin(now * 10 + racer.index) * size * 0.06;
 
