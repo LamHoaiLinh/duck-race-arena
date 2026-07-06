@@ -1,23 +1,21 @@
-# Mint Duck Race Arena
+# Mint Duck Race Arena - Fairplay Jump Pad Edition
 
-Web game dua vit chay truc tiep tren trinh duyet bang HTML5, CSS3, JavaScript thuan va Canvas API.
+Game đua vịt casual chạy trực tiếp trên trình duyệt bằng HTML5, CSS3, JavaScript thuần và Canvas API.
 
-## Dac diem ban sua loi
+## Điểm mới trong bản này
 
-- Giao dien mint green gon hon, khong con badge chu lon de bi de len noi dung.
-- Duong dua xanh tim tach lan rieng, so lan tu sinh theo so nguoi choi tu 2 den 12.
-- Moi tay dua co chi so an: baseSpeed, burst, stability, luck, courage.
-- Su kien dien ra cham hon: moi 2 den 4 giay moi phat sinh mot su kien lon.
-- Binh luan ticker giu toi thieu khoang 2 giay de nguoi choi doc kip.
-- Bubble tren duong dua giu toi thieu khoang 1 giay.
-- Nguoi cham vach dich moi duoc tinh ket qua.
-- Voi van 15 giay, engine gan pacing de it nhat nguoi hang nhat cham dich truoc khi het thoi gian.
-- Co 15% kha nang hai nguoi ve dich gan nhu dong thoi, toi da 2 nguoi.
-- Co rubber-band nhe, khong buff qua lo cho mot nguoi.
-- 20% thoi gian cuoi tang xac suat finalSprint.
-- Khong dung backend, database, localStorage. Reload trang la reset.
+- Kết quả cuối ghi theo **Hạng 1, Hạng 2, Hạng 3**.
+- Nếu có 2 người cùng thắng thì hiển thị dạng: **Hạng 1: Tên A, Tên B**; người tiếp theo là **Hạng 2**.
+- Bỏ đường hầm/đường tắt xấu, thay bằng **bệ bật nhảy** trên từng lane.
+- Mỗi người chơi có đúng **1 bệ bật nhảy riêng**, vị trí random mỗi ván để bảo đảm fair play.
+- Bệ bật nhảy cho lợi thế khác nhau theo chỉ số ẩn: `burst`, `courage`, `luck`, `stability`.
+- Vấp té có đá trên lane và tay đua khựng lại khoảng 1 giây.
+- Gió xuôi tăng nhẹ, không buff quá lộ.
+- Gió ngược/lốc xoáy/gió/đá/bật nhảy có hiệu ứng rõ trên đường chạy tối thiểu khoảng 2 giây.
+- Bình luận trực tiếp giữ tối thiểu khoảng 2.2 giây để người chơi đọc kịp.
+- Sự kiện chính phát sinh chậm hơn, khoảng 2.8 đến 4.8 giây/lần.
 
-## Cau truc file
+## Cấu trúc file
 
 ```text
 index.html
@@ -30,40 +28,30 @@ assets/
 README.md
 ```
 
-## Cach chay
+## Cách chỉnh thông số nhanh
 
-Mo truc tiep file `index.html` bang trinh duyet hoac upload len GitHub Pages/Render Static Site.
+Mở `script.js`, tìm `GAME_CONFIG`:
 
-## Cach upload len GitHub Pages
+- `eventMinGap`, `eventMaxGap`: khoảng cách giữa các sự kiện.
+- `commentMinVisibleMs`: thời gian giữ bình luận.
+- `bubbleMinTime`: thời gian giữ bubble trên đầu tay đua.
+- `visualMinTime`: thời gian giữ hiệu ứng gió, lốc, đá, bật nhảy.
+- `tieRate`: xác suất 2 người đồng hạng nhất.
+- `rampMinGain`, `rampMaxGain`: độ xa tối thiểu/tối đa của bệ bật nhảy.
 
-1. Giai nen file ZIP.
-2. Tao repository moi tren GitHub, vi du `duck-race-arena`.
-3. Vao repository, chon **Add file** > **Upload files**.
-4. Keo toan bo file va thu muc ben trong folder da giai nen len GitHub.
-5. Bam **Commit changes**.
-6. Vao **Settings** > **Pages**.
-7. Muc **Build and deployment**, chon **Deploy from a branch**.
-8. Chon branch `main`, folder `/root`, bam **Save**.
-9. Doi GitHub tao link dang `https://ten-tai-khoan.github.io/duck-race-arena/`.
+## Cách upload lên GitHub Pages
 
-Luu y: `index.html` phai nam ngay o thu muc goc repository. Khong upload nguyen folder boc ngoai lam cho `index.html` nam long ben trong mot thu muc con.
+1. Giải nén file ZIP.
+2. Vào GitHub và mở repository của game.
+3. Upload toàn bộ file/folder bên trong thư mục giải nén lên repository.
+4. Bảo đảm `index.html`, `styles.css`, `script.js`, `README.md`, `assets/` nằm ngay thư mục gốc repository.
+5. Vào `Settings > Pages`.
+6. Source chọn `Deploy from a branch`.
+7. Branch chọn `main`, folder chọn `/root`.
+8. Bấm `Save`.
+9. Chờ 1-3 phút, sau đó mở link GitHub Pages.
+10. Nếu vẫn thấy bản cũ, bấm `Ctrl + F5` hoặc mở bằng tab ẩn danh để tránh cache.
 
-## Cach deploy Render Static Site
+## Lưu ý khi thay asset thật
 
-1. Dua source code len GitHub.
-2. Vao Render, chon **New** > **Static Site**.
-3. Ket noi repository.
-4. Build Command de trong.
-5. Publish Directory nhap `.`.
-6. Deploy.
-
-## Cach chinh thong so game
-
-Mo `script.js`, tim cac vung sau:
-
-- `GAME_CONFIG`: thoi gian su kien, so nguoi choi, ty le dong hang.
-- `ANIMAL_DATA`: danh sach con vat.
-- `MAP_DATA`: mau duong dua, do kho cua cua, rui ro duong tat.
-- `EVENT_COMMENTS`: cau binh luan truc tiep.
-- `RaceEngine`: module logic dua.
-
+Bản này đang vẽ hiệu ứng bằng Canvas nên không bắt buộc phải có ảnh PNG. Sau này có thể thay emoji con vật bằng PNG trong `assets/animals/` và sửa hàm `drawRacerToken()` trong `script.js`.

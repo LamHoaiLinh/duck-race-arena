@@ -1,6 +1,6 @@
 /*
-  Mint Duck Race Arena - Race Engine + Canvas UI
-  Ghi chu: comment trong code dung tieng Viet khong dau de de sua ve sau.
+  Mint Duck Race Arena - Fairplay Race Engine
+  Ghi chu: comment trong code dung tieng Viet khong dau de anh de sua ve sau.
 */
 
 'use strict';
@@ -11,13 +11,20 @@ const GAME_CONFIG = {
   defaultDuration: 30,
   minDuration: 15,
   maxDuration: 90,
-  eventMinGap: 2.0,
-  eventMaxGap: 4.0,
-  commentMinVisibleMs: 2000,
-  bubbleMinTime: 1.15,
+  eventMinGap: 2.8,
+  eventMaxGap: 4.8,
+  commentMinVisibleMs: 2200,
+  bubbleMinTime: 2.0,
+  visualMinTime: 2.2,
+  racerEventCooldown: 3.8,
   tieRate: 0.15,
   maxTieWinners: 2,
-  endAfterFirstFinish: true
+  endAfterFirstFinish: true,
+  rampProgressMin: 0.20,
+  rampProgressMax: 0.78,
+  rampTriggerWindow: 0.006,
+  rampMinGain: 0.018,
+  rampMaxGain: 0.062
 };
 
 const SAMPLE_NAMES = {
@@ -45,70 +52,69 @@ const MAP_DATA = [
   {
     id: 'mint-violet',
     name: 'Sân Mint Violet',
-    description: 'Màu xanh tím giống sân điền kinh, cua rộng, vạch làn rõ.',
+    description: 'Đường xanh tím tách làn, có bệ bật nhảy ngẫu nhiên trên từng lane.',
     trackColor: '#6F71B0',
     trackLight: '#8588C5',
     trackDark: '#34345D',
     curveDifficulty: 0.88,
-    shortcutRisk: 0.42,
-    shortcutGain: 0.055
+    windRisk: 0.42,
+    rampPower: 1.0
   },
   {
-    id: 'river-lane',
-    name: 'Kênh Bèo Mint',
-    description: 'Đường nước êm nhưng nhánh hẹp dễ kẹt.',
-    trackColor: '#5E8FD5',
-    trackLight: '#8DB6F2',
-    trackDark: '#265386',
-    curveDifficulty: 0.8,
-    shortcutRisk: 0.48,
-    shortcutGain: 0.065
+    id: 'ocean-violet',
+    name: 'Sân Ocean Violet',
+    description: 'Nền xanh tím đậm hơn, gió xuôi mạnh nhưng cua dễ trượt.',
+    trackColor: '#6572BD',
+    trackLight: '#93A4EA',
+    trackDark: '#2C356A',
+    curveDifficulty: 0.96,
+    windRisk: 0.48,
+    rampPower: 1.06
   },
   {
     id: 'bamboo-cup',
     name: 'Bamboo Cup',
-    description: 'Đường cua mượt, có lối tắt xuyên bụi tre.',
+    description: 'Đường dễ xem, bệ nhảy vừa phải, ít lốc xoáy hơn.',
     trackColor: '#64A98C',
     trackLight: '#94D3B4',
     trackDark: '#23634D',
     curveDifficulty: 0.76,
-    shortcutRisk: 0.38,
-    shortcutGain: 0.052
+    windRisk: 0.32,
+    rampPower: 0.92
   },
   {
     id: 'sunny-loop',
     name: 'Sunny Loop',
-    description: 'Đường sáng, dễ xem, cuối chặng dễ bứt tốc.',
+    description: 'Cuối chặng dễ bứt tốc, thích hợp trận ngắn 15-30 giây.',
     trackColor: '#7B79C9',
     trackLight: '#A7A5F0',
     trackDark: '#403C88',
     curveDifficulty: 0.9,
-    shortcutRisk: 0.36,
-    shortcutGain: 0.047
+    windRisk: 0.38,
+    rampPower: 1.0
   },
   {
     id: 'stormy-mint',
     name: 'Stormy Mint',
-    description: 'Gió thất thường, đường tắt lợi lớn nhưng rủi ro cao.',
+    description: 'Gió và lốc nhiều hơn, bệ bật nhảy lợi hơn nhưng dễ lỗi nhịp.',
     trackColor: '#5B68A8',
     trackLight: '#8E9BE0',
     trackDark: '#2F385F',
     curveDifficulty: 1.0,
-    shortcutRisk: 0.58,
-    shortcutGain: 0.075
+    windRisk: 0.62,
+    rampPower: 1.14
   }
 ];
 
 const EVENT_COMMENTS = {
   headwind: '{name} gặp gió ngược, tốc độ giảm thấy rõ!',
-  tailwind: '{name} gặp gió xuôi và đang tăng tốc!',
-  stumble: '{name} vừa vấp nhẹ nhưng đang cố lấy lại thăng bằng!',
-  slideTurn: '{name} trượt cua, mất nhịp trong tích tắc!',
+  tailwind: '{name} gặp gió xuôi, nhịp chạy đang nhẹ hơn!',
+  stumble: '{name} vấp phải đá và khựng lại một nhịp!',
+  slideTurn: '{name} gặp lốc xoáy ở cua, mất thăng bằng nhẹ!',
   block: '{name} bị chắn đường vì nhóm phía trước quá sát!',
-  bump: '{name} va chạm nhẹ, cả làn đua nóng lên rồi!',
-  shortcutEnter: '{name} liều lĩnh lao vào đường tắt!',
-  shortcutSuccess: '{name} thoát khỏi đường tắt và vươn lên mạnh mẽ!',
-  shortcutFail: '{name} bị kẹt ở nhánh hẹp!',
+  bump: '{name} va chạm nhẹ, tốc độ bị hụt một chút!',
+  jumpSuccess: '{name} bật qua bệ nhảy và bay xa thêm một đoạn!',
+  jumpFail: '{name} đạp bệ nhảy lỗi nhịp, bị chậm lại!',
   slipstream: '{name} đang đu bám người phía trước để lấy đà!',
   finalSprint: '{name} đang bứt tốc ở những giây cuối!'
 };
@@ -116,13 +122,12 @@ const EVENT_COMMENTS = {
 const EVENT_BUBBLES = {
   headwind: 'Gió ngược!',
   tailwind: 'Gió xuôi!',
-  stumble: 'Vấp nhẹ!',
-  slideTurn: 'Trượt cua!',
+  stumble: 'Vấp đá!',
+  slideTurn: 'Lốc xoáy!',
   block: 'Bị chắn!',
   bump: 'Va chạm!',
-  shortcutEnter: 'Đường tắt!',
-  shortcutSuccess: 'Thoát hiểm!',
-  shortcutFail: 'Kẹt nhánh!',
+  jumpSuccess: 'Bật nhảy!',
+  jumpFail: 'Lỗi nhịp!',
   slipstream: 'Đu bám!',
   finalSprint: 'Bứt tốc!'
 };
@@ -157,7 +162,7 @@ function parseNames(raw) {
 }
 
 function weightedPick(weightedItems) {
-  const valid = weightedItems.filter((item) => item.weight > 0);
+  const valid = weightedItems.filter((item) => item && item.weight > 0 && item.value);
   const total = valid.reduce((sum, item) => sum + item.weight, 0);
   if (!valid.length || total <= 0) return null;
   let cursor = Math.random() * total;
@@ -178,10 +183,13 @@ class RaceEngine {
     this.running = false;
     this.finished = false;
     this.nextEventAt = rand(GAME_CONFIG.eventMinGap, GAME_CONFIG.eventMaxGap);
-    this.racers = this.createRacers(names);
+    this.lastEventRacerId = null;
+    this.visualEvents = [];
     this.tieMode = false;
     this.tieIds = [];
+    this.racers = this.createRacers(names);
     this.assignFairFinishTimes();
+    this.assignFairJumpPads();
   }
 
   createRacers(names) {
@@ -189,71 +197,86 @@ class RaceEngine {
     return names.map((name, index) => {
       const animal = animals[index % animals.length];
       return {
-        id: `racer-${index}-${Date.now()}`,
+        id: `racer-${index}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
         index,
         lane: index,
         name,
         animal,
         stats: {
-          baseSpeed: rand(0.9, 1.1),
-          burst: rand(0.45, 1.0),
-          stability: rand(0.45, 1.0),
-          luck: rand(0.42, 1.0),
-          courage: rand(0.38, 1.0)
+          baseSpeed: rand(0.90, 1.10),
+          burst: rand(0.45, 1.00),
+          stability: rand(0.45, 1.00),
+          luck: rand(0.42, 1.00),
+          courage: rand(0.38, 1.00)
         },
         progress: 0,
         targetFinishTime: this.duration,
         finishedAt: null,
-        usedShortcut: false,
-        inShortcut: false,
-        shortcutResolveAt: 0,
         eventCooldownUntil: 0,
+        eventCount: 0,
+        hardPauseUntil: 0,
         effects: [],
         bubble: null,
         lastPosition: null,
         trail: [],
-        laneOffset: rand(-0.006, 0.006),
+        laneOffset: rand(-0.003, 0.003),
+        jumpPad: null,
         eventHistory: []
       };
     });
   }
 
   assignFairFinishTimes() {
-    // Cham thoi gian dich truoc khi chay de dam bao van dua co nguoi cham vach dich dung thoi luong nguoi dung chon.
-    // Diem so gom chi so an va nhieu nho, khong buff truc tiep qua lo trong luc dua.
+    // Thuat toan fair play: moi tay dua co target pace an dua tren chi so + nhieu nho.
+    // Su kien chi lam lech nhip trong gioi han, khong buff lo lieu mot nguoi.
     const ranked = this.racers
       .map((racer) => {
         const s = racer.stats;
         const score =
-          s.baseSpeed * 0.42 +
-          s.burst * 0.2 +
-          s.stability * 0.14 +
-          s.luck * 0.14 +
-          s.courage * 0.1 +
-          rand(-0.08, 0.08);
+          s.baseSpeed * 0.38 +
+          s.burst * 0.22 +
+          s.stability * 0.15 +
+          s.luck * 0.15 +
+          s.courage * 0.10 +
+          rand(-0.075, 0.075);
         return { racer, score };
       })
       .sort((a, b) => b.score - a.score);
 
-    this.tieMode = this.racers.length >= 4 && Math.random() < GAME_CONFIG.tieRate;
-    const winnerTime = this.duration * rand(0.91, 0.975);
+    this.tieMode = this.racers.length >= 3 && Math.random() < GAME_CONFIG.tieRate;
+    const winnerTime = this.duration * rand(0.88, 0.96);
 
     ranked.forEach((entry, rankIndex) => {
-      const spread = rankIndex === 0 ? 0 : rand(0.025, 0.075) * rankIndex;
-      const skillAdjust = clamp((ranked[0].score - entry.score) * 0.12, 0, 0.16);
-      const naturalNoise = rand(0, 0.045);
+      const spread = rankIndex === 0 ? 0 : rand(0.025, 0.07) * rankIndex;
+      const skillAdjust = clamp((ranked[0].score - entry.score) * 0.10, 0, 0.14);
+      const naturalNoise = rand(0, 0.035);
       const raw = winnerTime + this.duration * (spread + skillAdjust + naturalNoise);
       entry.racer.targetFinishTime = clamp(raw, winnerTime, this.duration * 1.45);
     });
 
-    if (this.tieMode) {
-      const first = ranked[0].racer;
-      const second = ranked[1].racer;
+    if (this.tieMode && ranked[1]) {
       const tieTime = winnerTime;
-      first.targetFinishTime = tieTime;
-      second.targetFinishTime = tieTime;
-      this.tieIds = [first.id, second.id];
+      ranked[0].racer.targetFinishTime = tieTime;
+      ranked[1].racer.targetFinishTime = tieTime + rand(-0.035, 0.035);
+      this.tieIds = [ranked[0].racer.id, ranked[1].racer.id];
     }
+  }
+
+  assignFairJumpPads() {
+    // Moi racer co dung 1 be bat nhay rieng trong lane cua minh.
+    // Vi tri moi van deu random, nhung so luong la cong bang: khong ai co 2 be, khong ai bi thieu.
+    const count = this.racers.length;
+    const slots = shuffle(this.racers.map((_, index) => index));
+    this.racers.forEach((racer, order) => {
+      const base = GAME_CONFIG.rampProgressMin + ((slots[order] + 0.5) / count) * (GAME_CONFIG.rampProgressMax - GAME_CONFIG.rampProgressMin);
+      const jitter = rand(-0.035, 0.035);
+      racer.jumpPad = {
+        progress: clamp(base + jitter, GAME_CONFIG.rampProgressMin, GAME_CONFIG.rampProgressMax),
+        used: false,
+        activeUntil: 0,
+        result: 'ready'
+      };
+    });
   }
 
   start() {
@@ -268,10 +291,11 @@ class RaceEngine {
   update(dt) {
     if (!this.running || this.finished) return;
     this.elapsed += dt;
+    this.visualEvents = this.visualEvents.filter((event) => event.until > this.elapsed);
 
-    this.handleScheduledEvent();
     this.updateRacers(dt);
-    this.resolveShortcutEvents();
+    this.checkJumpPadCollisions();
+    this.handleScheduledEvent();
     this.checkFinish();
   }
 
@@ -297,33 +321,67 @@ class RaceEngine {
       if (racer.finishedAt !== null) continue;
 
       racer.effects = racer.effects.filter((effect) => effect.until > this.elapsed);
-      const effectMult = racer.effects.reduce((mult, effect) => mult * effect.multiplier, 1);
+      if (racer.hardPauseUntil > this.elapsed) {
+        // Vấp đá phải thấy khựng thật: 1 giay dau khong cong tien do.
+        continue;
+      }
 
+      const effectMult = racer.effects.reduce((mult, effect) => mult * effect.multiplier, 1);
       const gapFromLeader = Math.max(0, leaderProgress - racer.progress);
       const isLeader = ranking[0]?.id === racer.id;
 
-      // Rubber-band nhe: chi dieu chinh nho de khong bo xa qua som, khong lap nguoc trang thai qua lo.
+      // Rubber-band rat nhe de khong bo xa qua som, nhung gioi han thap de khong lo gian lan.
       let rubber = 1;
-      if (!isLeader && gapFromLeader > 0.08 && raceFactor < 0.82) rubber += clamp(gapFromLeader * 0.28, 0, 0.08);
-      if (isLeader && leaderProgress > 0.22 && raceFactor < 0.7) rubber -= 0.025;
+      if (!isLeader && gapFromLeader > 0.09 && raceFactor < 0.82) rubber += clamp(gapFromLeader * 0.24, 0, 0.07);
+      if (isLeader && leaderProgress > 0.23 && raceFactor < 0.7) rubber -= 0.018;
 
-      const finalPush = raceFactor > 0.8 ? 1 + racer.stats.burst * 0.035 : 1;
+      const finalPush = raceFactor > 0.8 ? 1 + racer.stats.burst * 0.03 : 1;
       const idealProgress = this.elapsed / racer.targetFinishTime;
       const pacingDiff = idealProgress - racer.progress;
-      const pacingCorrection = clamp(pacingDiff * 0.5, -0.025, 0.04);
+      const pacingCorrection = clamp(pacingDiff * 0.46, -0.020, 0.034);
       const baseRate = 1 / racer.targetFinishTime;
-      const variation = 1 + Math.sin((this.elapsed * 1.7) + racer.index) * 0.012 + rand(-0.008, 0.008);
+      const variation = 1 + Math.sin((this.elapsed * 1.55) + racer.index * 0.9) * 0.01 + rand(-0.005, 0.005);
 
       let delta = dt * baseRate * racer.stats.baseSpeed * effectMult * rubber * finalPush * variation;
       delta += dt * pacingCorrection;
 
-      // Truoc thoi diem cham dich da duoc gan, khong cho vuot vach de ket qua dung theo cham vach.
       const softCapBeforeFinish = this.elapsed < racer.targetFinishTime ? 0.996 : 1.03;
       racer.progress = clamp(racer.progress + delta, 0, softCapBeforeFinish);
 
-      // Neu da den moc dich ma van thieu chut xiu, keo ve dich bang correction rat nhe.
       if (this.elapsed >= racer.targetFinishTime && racer.progress < 1) {
-        racer.progress = Math.min(1, racer.progress + dt * 0.9);
+        racer.progress = Math.min(1, racer.progress + dt * 0.72);
+      }
+    }
+  }
+
+  checkJumpPadCollisions() {
+    for (const racer of this.racers) {
+      const pad = racer.jumpPad;
+      if (!pad || pad.used || racer.finishedAt !== null) continue;
+      const crossed = racer.progress >= pad.progress - GAME_CONFIG.rampTriggerWindow;
+      if (!crossed) continue;
+
+      pad.used = true;
+      pad.activeUntil = this.elapsed + GAME_CONFIG.visualMinTime;
+
+      const successChance = clamp(0.45 + racer.stats.courage * 0.18 + racer.stats.luck * 0.24 + racer.stats.stability * 0.13, 0.38, 0.88);
+      const success = Math.random() < successChance;
+      const jumpPower = clamp(
+        GAME_CONFIG.rampMinGain + (racer.stats.burst * 0.020 + racer.stats.courage * 0.014 + racer.stats.luck * 0.010) * this.map.rampPower,
+        GAME_CONFIG.rampMinGain,
+        GAME_CONFIG.rampMaxGain
+      );
+
+      if (success) {
+        pad.result = 'success';
+        racer.progress = Math.min(0.996, racer.progress + jumpPower);
+        this.addEffect(racer, 'jumpSuccess', 1.05 + racer.stats.burst * 0.05, 1.35);
+        this.applyEvent('jumpSuccess', racer, { ignoreCooldown: true, noExtraEffect: true });
+      } else {
+        pad.result = 'fail';
+        racer.hardPauseUntil = Math.max(racer.hardPauseUntil, this.elapsed + 0.55);
+        this.addEffect(racer, 'jumpFail', 0.70, 1.45);
+        this.applyEvent('jumpFail', racer, { ignoreCooldown: true, noExtraEffect: true });
       }
     }
   }
@@ -340,29 +398,33 @@ class RaceEngine {
 
   pickEvent() {
     const raceFactor = this.getRaceFactor();
-    const active = this.racers.filter((r) => r.finishedAt === null);
+    const active = this.racers.filter((r) => r.finishedAt === null && r.eventCooldownUntil <= this.elapsed);
     if (!active.length) return null;
 
-    const closePair = this.findClosePair();
-    const slipstreamTarget = this.findSlipstreamTarget();
-    const shortcutTarget = this.findShortcutCandidate();
-    const curveTarget = this.findCurveCandidate();
+    const fairActive = active.filter((r) => r.id !== this.lastEventRacerId);
+    const pool = fairActive.length ? fairActive : active;
+    const closePair = this.findClosePair(pool);
+    const slipstreamTarget = this.findSlipstreamTarget(pool);
+    const curveTarget = this.findCurveCandidate(pool);
 
     const choices = [];
-    choices.push({ value: { type: 'headwind', racer: this.pickVulnerableRacer(active) }, weight: 1.0 });
-    choices.push({ value: { type: 'tailwind', racer: this.pickGoodEventRacer(active) }, weight: 0.9 });
-    choices.push({ value: { type: 'stumble', racer: this.pickStumbleRacer(active) }, weight: 0.95 });
-    choices.push({ value: { type: 'slideTurn', racer: curveTarget }, weight: curveTarget ? 0.8 * this.map.curveDifficulty : 0 });
-    choices.push({ value: { type: 'block', racer: closePair?.behind, extra: closePair }, weight: closePair ? 1.0 : 0 });
-    choices.push({ value: { type: 'bump', racer: closePair?.behind, extra: closePair }, weight: closePair ? 0.8 : 0 });
-    choices.push({ value: { type: 'slipstream', racer: slipstreamTarget }, weight: slipstreamTarget ? 0.95 : 0 });
-    choices.push({ value: { type: 'shortcutEnter', racer: shortcutTarget }, weight: shortcutTarget ? 1.0 : 0 });
-    choices.push({ value: { type: 'finalSprint', racer: this.pickFinalSprinter(active) }, weight: raceFactor > 0.8 ? 2.3 : 0.12 });
+    choices.push({ value: { type: 'headwind', racer: this.pickVulnerableRacer(pool) }, weight: 0.8 + this.map.windRisk * 0.35 });
+    choices.push({ value: { type: 'tailwind', racer: this.pickGoodEventRacer(pool) }, weight: 0.9 });
+    choices.push({ value: { type: 'stumble', racer: this.pickStumbleRacer(pool) }, weight: 0.75 });
+    choices.push({ value: { type: 'slideTurn', racer: curveTarget }, weight: curveTarget ? 0.62 * this.map.curveDifficulty : 0 });
+    choices.push({ value: { type: 'block', racer: closePair?.behind, extra: closePair }, weight: closePair ? 0.7 : 0 });
+    choices.push({ value: { type: 'bump', racer: closePair?.behind, extra: closePair }, weight: closePair ? 0.55 : 0 });
+    choices.push({ value: { type: 'slipstream', racer: slipstreamTarget }, weight: slipstreamTarget ? 0.7 : 0 });
+    choices.push({ value: { type: 'finalSprint', racer: this.pickFinalSprinter(pool) }, weight: raceFactor > 0.8 ? 2.0 : 0.05 });
 
     const picked = weightedPick(choices);
     if (!picked || !picked.racer) return null;
-    if (picked.racer.eventCooldownUntil > this.elapsed && !['block', 'bump'].includes(picked.type)) return null;
     return picked;
+  }
+
+  fairnessWeight(racer) {
+    // Ai vua duoc/chiu nhieu su kien thi giam xac suat tiep theo de nhin cong bang hon.
+    return 1 / (1 + racer.eventCount * 0.38);
   }
 
   pickVulnerableRacer(active) {
@@ -371,8 +433,8 @@ class RaceEngine {
       const rankIndex = ranking.findIndex((item) => item.id === racer.id);
       const badLuck = 1.1 - racer.stats.luck;
       const lowStable = 1.15 - racer.stats.stability;
-      const leaderPressure = rankIndex <= 1 ? 0.28 : 0;
-      return { value: racer, weight: 0.35 + badLuck * 0.55 + lowStable * 0.35 + leaderPressure };
+      const leaderPressure = rankIndex <= 1 ? 0.18 : 0;
+      return { value: racer, weight: (0.3 + badLuck * 0.48 + lowStable * 0.42 + leaderPressure) * this.fairnessWeight(racer) };
     });
     return weightedPick(items) || pick(active);
   }
@@ -382,11 +444,11 @@ class RaceEngine {
     const leader = ranking[0];
     const items = active.map((racer) => {
       const rankIndex = ranking.findIndex((item) => item.id === racer.id);
-      const trailingBoost = rankIndex >= Math.ceil(active.length / 2) ? 0.28 : 0;
-      const leaderPenalty = racer.id === leader.id && this.getRaceFactor() < 0.78 ? -0.25 : 0;
+      const trailingBoost = rankIndex >= Math.ceil(active.length / 2) ? 0.20 : 0;
+      const leaderPenalty = racer.id === leader.id && this.getRaceFactor() < 0.78 ? -0.20 : 0;
       return {
         value: racer,
-        weight: 0.25 + racer.stats.luck * 0.32 + racer.stats.burst * 0.28 + trailingBoost + leaderPenalty
+        weight: (0.25 + racer.stats.luck * 0.28 + racer.stats.burst * 0.22 + trailingBoost + leaderPenalty) * this.fairnessWeight(racer)
       };
     });
     return weightedPick(items) || pick(active);
@@ -395,7 +457,7 @@ class RaceEngine {
   pickStumbleRacer(active) {
     const items = active.map((racer) => ({
       value: racer,
-      weight: 0.2 + (1 - racer.stats.stability) * 1.15 + (1 - racer.stats.luck) * 0.35
+      weight: (0.16 + (1 - racer.stats.stability) * 1.2 + (1 - racer.stats.luck) * 0.28) * this.fairnessWeight(racer)
     }));
     return weightedPick(items) || pick(active);
   }
@@ -404,22 +466,24 @@ class RaceEngine {
     const ranking = this.getRanking();
     const items = active.map((racer) => {
       const rankIndex = ranking.findIndex((item) => item.id === racer.id);
-      const canFlip = rankIndex >= 1 && rankIndex <= 4 ? 0.28 : 0;
-      return { value: racer, weight: 0.28 + racer.stats.burst * 0.75 + racer.stats.luck * 0.22 + canFlip };
+      const canFlip = rankIndex >= 1 && rankIndex <= 4 ? 0.24 : 0;
+      return { value: racer, weight: (0.25 + racer.stats.burst * 0.78 + racer.stats.luck * 0.22 + canFlip) * this.fairnessWeight(racer) };
     });
     return weightedPick(items) || pick(active);
   }
 
-  findClosePair() {
+  findClosePair(pool = this.racers) {
+    const ids = new Set(pool.map((r) => r.id));
     const active = this.racers.filter((r) => r.finishedAt === null);
     let best = null;
     for (const behind of active) {
+      if (!ids.has(behind.id)) continue;
       for (const front of active) {
         if (behind.id === front.id) continue;
         const gap = front.progress - behind.progress;
         const laneGap = Math.abs(front.lane - behind.lane);
-        if (gap > 0 && gap < 0.026 && laneGap <= 2) {
-          const score = (0.026 - gap) + (2 - laneGap) * 0.003;
+        if (gap > 0 && gap < 0.024 && laneGap <= 2) {
+          const score = (0.024 - gap) + (2 - laneGap) * 0.002;
           if (!best || score > best.score) best = { behind, front, score };
         }
       }
@@ -427,39 +491,19 @@ class RaceEngine {
     return best;
   }
 
-  findSlipstreamTarget() {
-    const pair = this.findClosePair();
+  findSlipstreamTarget(pool = this.racers) {
+    const pair = this.findClosePair(pool);
     if (!pair) return null;
-    if (Math.random() < 0.25 + pair.behind.stats.luck * 0.35) return pair.behind;
+    if (Math.random() < 0.20 + pair.behind.stats.luck * 0.28) return pair.behind;
     return null;
   }
 
-  findShortcutCandidate() {
-    const active = this.racers.filter((r) => r.finishedAt === null && !r.usedShortcut && !r.inShortcut);
-    const zone = active.filter((r) => r.progress > 0.34 && r.progress < 0.66);
-    if (!zone.length) return null;
-    const ranking = this.getRanking();
-    const items = zone.map((racer) => {
-      const rankIndex = ranking.findIndex((item) => item.id === racer.id);
-      const behindNeed = rankIndex >= 2 ? 0.22 : 0;
-      return {
-        value: racer,
-        weight: racer.stats.courage * 0.75 + racer.stats.luck * 0.25 + behindNeed - (rankIndex === 0 ? 0.18 : 0)
-      };
-    });
-    const candidate = weightedPick(items);
-    if (!candidate) return null;
-    const chance = 0.18 + candidate.stats.courage * 0.34 + candidate.stats.luck * 0.12;
-    return Math.random() < chance ? candidate : null;
-  }
-
-  findCurveCandidate() {
-    const active = this.racers.filter((r) => r.finishedAt === null);
-    const inCurve = active.filter((r) => this.isInCurve(r.progress));
+  findCurveCandidate(pool = this.racers) {
+    const inCurve = pool.filter((r) => r.finishedAt === null && this.isInCurve(r.progress));
     if (!inCurve.length) return null;
     const items = inCurve.map((racer) => ({
       value: racer,
-      weight: 0.18 + (1 - racer.stats.stability) * 0.9 + (1 - racer.stats.luck) * 0.24
+      weight: (0.15 + (1 - racer.stats.stability) * 0.85 + (1 - racer.stats.luck) * 0.20) * this.fairnessWeight(racer)
     }));
     return weightedPick(items);
   }
@@ -471,58 +515,53 @@ class RaceEngine {
 
   applyEvent(type, racer, extra = null) {
     if (!racer || racer.finishedAt !== null) return;
-    racer.eventCooldownUntil = this.elapsed + 2.0;
-    racer.eventHistory.push({ type, at: this.elapsed });
+    const ignoreCooldown = Boolean(extra?.ignoreCooldown);
+    const noExtraEffect = Boolean(extra?.noExtraEffect);
+    if (!ignoreCooldown && racer.eventCooldownUntil > this.elapsed) return;
 
-    switch (type) {
-      case 'headwind':
-        this.addEffect(racer, 'headwind', 0.76, 1.65);
-        break;
-      case 'tailwind':
-        this.addEffect(racer, 'tailwind', 1.14 + racer.stats.luck * 0.04, 1.75);
-        break;
-      case 'stumble': {
-        const recover = Math.random() < racer.stats.luck * 0.32;
-        this.addEffect(racer, 'stumble', recover ? 0.72 : 0.5, recover ? 1.15 : 1.45);
-        break;
+    racer.eventCooldownUntil = this.elapsed + GAME_CONFIG.racerEventCooldown;
+    racer.eventCount += 1;
+    racer.eventHistory.push({ type, at: this.elapsed });
+    this.lastEventRacerId = racer.id;
+
+    if (!noExtraEffect) {
+      switch (type) {
+        case 'headwind':
+          this.addEffect(racer, 'headwind', 0.74, 2.1);
+          break;
+        case 'tailwind':
+          this.addEffect(racer, 'tailwind', 1.08 + racer.stats.luck * 0.035, 2.05);
+          break;
+        case 'stumble': {
+          const recover = Math.random() < racer.stats.luck * 0.32;
+          racer.hardPauseUntil = Math.max(racer.hardPauseUntil, this.elapsed + 1.0);
+          this.addEffect(racer, 'stumble', recover ? 0.72 : 0.58, 1.7);
+          break;
+        }
+        case 'slideTurn':
+          this.addEffect(racer, 'slideTurn', 0.66 + racer.stats.stability * 0.14, 1.8);
+          break;
+        case 'block':
+          this.addEffect(racer, 'block', 0.76, 1.7);
+          if (extra?.front) this.addEffect(extra.front, 'pressure', 0.96, 1.2);
+          break;
+        case 'bump':
+          this.addEffect(racer, 'bump', 0.82, 1.45);
+          if (extra?.front) this.addEffect(extra.front, 'bump', 0.90, 1.25);
+          break;
+        case 'slipstream':
+          this.addEffect(racer, 'slipstream', 1.09 + racer.stats.luck * 0.025, 1.75);
+          break;
+        case 'finalSprint':
+          this.addEffect(racer, 'finalSprint', 1.10 + racer.stats.burst * 0.12, 2.3);
+          break;
+        default:
+          break;
       }
-      case 'slideTurn':
-        this.addEffect(racer, 'slideTurn', 0.62 + racer.stats.stability * 0.18, 1.35);
-        break;
-      case 'block':
-        this.addEffect(racer, 'block', 0.68, 1.25);
-        if (extra?.front) this.addEffect(extra.front, 'pressure', 0.94, 1.0);
-        break;
-      case 'bump':
-        this.addEffect(racer, 'bump', 0.82, 1.15);
-        if (extra?.front) this.addEffect(extra.front, 'bump', 0.88, 1.05);
-        break;
-      case 'shortcutEnter':
-        racer.usedShortcut = true;
-        racer.inShortcut = true;
-        racer.shortcutResolveAt = this.elapsed + 2.0;
-        this.addEffect(racer, 'shortcutEnter', 1.06, 1.2);
-        break;
-      case 'shortcutSuccess':
-        racer.inShortcut = false;
-        racer.progress = Math.min(0.996, racer.progress + this.map.shortcutGain + racer.stats.luck * 0.018);
-        this.addEffect(racer, 'shortcutSuccess', 1.13, 1.45);
-        break;
-      case 'shortcutFail':
-        racer.inShortcut = false;
-        this.addEffect(racer, 'shortcutFail', 0.48, 1.65);
-        break;
-      case 'slipstream':
-        this.addEffect(racer, 'slipstream', 1.13 + racer.stats.luck * 0.03, 1.35);
-        break;
-      case 'finalSprint':
-        this.addEffect(racer, 'finalSprint', 1.13 + racer.stats.burst * 0.18, 2.15);
-        break;
-      default:
-        break;
     }
 
     this.showBubble(racer, type);
+    this.createVisualEvent(type, racer);
     this.onEvent?.({ type, racer, comment: formatComment(type, racer) });
   }
 
@@ -538,20 +577,29 @@ class RaceEngine {
     racer.bubble = {
       text: EVENT_BUBBLES[type] || type,
       type,
-      until: this.elapsed + Math.max(GAME_CONFIG.bubbleMinTime, 1.25)
+      until: this.elapsed + Math.max(GAME_CONFIG.bubbleMinTime, 2.0)
     };
   }
 
-  resolveShortcutEvents() {
-    for (const racer of this.racers) {
-      if (!racer.inShortcut || this.elapsed < racer.shortcutResolveAt) continue;
-      const successChance = clamp(
-        0.38 + racer.stats.luck * 0.3 + racer.stats.stability * 0.18 - this.map.shortcutRisk * 0.28,
-        0.24,
-        0.78
-      );
-      this.applyEvent(Math.random() < successChance ? 'shortcutSuccess' : 'shortcutFail', racer);
-    }
+  createVisualEvent(type, racer) {
+    let visualType = null;
+    if (type === 'headwind') visualType = 'tornado';
+    if (type === 'tailwind') visualType = 'wind';
+    if (type === 'slideTurn') visualType = 'tornado';
+    if (type === 'stumble') visualType = 'rock';
+    if (type === 'jumpSuccess' || type === 'jumpFail') visualType = 'rampBurst';
+    if (type === 'finalSprint') visualType = 'speed';
+    if (!visualType) return;
+
+    this.visualEvents.push({
+      type: visualType,
+      lane: racer.lane,
+      progress: racer.progress,
+      racerId: racer.id,
+      createdAt: this.elapsed,
+      until: this.elapsed + GAME_CONFIG.visualMinTime,
+      success: type === 'jumpSuccess'
+    });
   }
 
   checkFinish() {
@@ -568,6 +616,11 @@ class RaceEngine {
     const timeExpired = this.elapsed >= this.duration + 0.1;
 
     if (hasWinner && GAME_CONFIG.endAfterFirstFinish) {
+      if (this.tieMode) {
+        const tieRacers = this.racers.filter((r) => this.tieIds.includes(r.id));
+        const waitingTie = tieRacers.some((r) => r.finishedAt === null && this.elapsed < r.targetFinishTime + 0.35);
+        if (waitingTie) return;
+      }
       this.finished = true;
       this.running = false;
       this.onFinish?.(this.getResults());
@@ -575,6 +628,12 @@ class RaceEngine {
     }
 
     if (timeExpired) {
+      // Truong hop hiem do su kien lam cham qua muc: dam bao co nguoi cham vach dich theo yeu cau thoi gian.
+      const ranking = this.getRanking();
+      if (ranking[0] && ranking[0].finishedAt === null) {
+        ranking[0].progress = 1;
+        ranking[0].finishedAt = this.elapsed;
+      }
       this.finished = true;
       this.running = false;
       this.onFinish?.(this.getResults());
@@ -583,8 +642,8 @@ class RaceEngine {
 
   getResults() {
     const ranking = this.getRanking();
-    return ranking.map((racer, index) => ({
-      rank: index + 1,
+    return ranking.map((racer) => ({
+      id: racer.id,
       name: racer.name,
       animal: racer.animal,
       progress: racer.progress,
@@ -750,7 +809,7 @@ class GameApp {
     this.dom.startBtn.disabled = true;
     this.dom.replayBtn.disabled = true;
     this.dom.timerText.textContent = `${duration.toFixed(1)}s`;
-    this.showComment('Cuộc đua bắt đầu! Các tay đua đang tăng tốc khỏi vạch xuất phát.');
+    this.showComment('Cuộc đua bắt đầu! Mỗi tay đua có một làn và một bệ bật nhảy riêng.');
     this.renderRanking(true);
   }
 
@@ -810,30 +869,55 @@ class GameApp {
   finishRace(results) {
     this.dom.startBtn.disabled = false;
     this.dom.replayBtn.disabled = false;
-    const winners = results.filter((r) => r.finishedAt !== null);
-    if (winners.length >= 2 && Math.abs(winners[0].finishedAt - winners[1].finishedAt) < 0.12) {
-      this.showComment(`${winners[0].name} và ${winners[1].name} gần như chạm đích đồng thời!`);
-    } else if (winners[0]) {
-      this.showComment(`${winners[0].name} đã chạm vạch đích đầu tiên!`);
+    const groups = this.buildResultGroups(results);
+    const firstGroup = groups[0];
+    if (firstGroup?.items.length === 2 && firstGroup.items.every((item) => item.finishedAt !== null)) {
+      this.showComment(`${firstGroup.items[0].name} và ${firstGroup.items[1].name} cùng chạm vạch đích ở hạng 1!`);
+    } else if (firstGroup?.items[0]?.finishedAt !== null) {
+      this.showComment(`${firstGroup.items[0].name} đã chạm vạch đích đầu tiên!`);
     } else {
-      this.showComment('Hết giờ! Bảng xếp hạng được tính theo vị trí hiện tại.');
+      this.showComment('Hết giờ! Hạng 1 được tính cho người đã chạm vạch hoặc tiến gần vạch nhất.');
     }
     this.spawnConfetti();
-    this.showResults(results.slice(0, 3));
+    this.showResults(groups.slice(0, 3));
   }
 
-  showResults(top3) {
-    this.dom.podium.innerHTML = top3.map((item, index) => {
-      const label = item.finishedAt !== null ? `${round1(item.finishedAt)}s` : `${Math.round(item.progress * 100)}%`;
-      const tieText = item.isTieWinner ? ' · đồng thời' : '';
+  buildResultGroups(results) {
+    const groups = [];
+    const sorted = results.slice();
+    for (const item of sorted) {
+      const last = groups[groups.length - 1];
+      const canTieFirst = groups.length === 1 && last.items.length < GAME_CONFIG.maxTieWinners;
+      const closeFinish = last && item.finishedAt !== null && last.items[0].finishedAt !== null && Math.abs(item.finishedAt - last.items[0].finishedAt) <= 0.16;
+      if (canTieFirst && closeFinish) {
+        last.items.push(item);
+      } else {
+        groups.push({ rank: groups.length + 1, items: [item] });
+      }
+      if (groups.length >= 3 && groups[groups.length - 1].items.length >= 1) {
+        // Lay du 3 nhom hang la du cho overlay.
+        continue;
+      }
+    }
+    return groups.slice(0, 3).map((group, index) => ({ ...group, rank: index + 1 }));
+  }
+
+  showResults(groups) {
+    this.dom.podium.innerHTML = groups.map((group) => {
+      const names = group.items.map((item) => `${this.escapeHtml(item.name)} ${item.animal.emoji}`).join(', ');
+      const progressLabel = group.items.map((item) => {
+        if (item.finishedAt !== null) return `${round1(item.finishedAt)}s`;
+        return `${Math.round(item.progress * 100)}% chặng đua`;
+      }).join(' · ');
+      const subLabel = group.items.length > 1 ? 'Đồng hạng 1' : this.escapeHtml(group.items[0].animal.label);
       return `
         <div class="podium-item">
-          <div class="podium-rank">#${index + 1}</div>
+          <div class="podium-rank">${group.rank}</div>
           <div class="podium-name">
-            <strong>${this.escapeHtml(item.name)} ${item.animal.emoji}</strong>
-            <span>${this.escapeHtml(item.animal.label)}${tieText}</span>
+            <strong>Hạng ${group.rank}: ${names}</strong>
+            <span>${subLabel}</span>
           </div>
-          <div class="podium-time">${label}</div>
+          <div class="podium-time">${progressLabel}</div>
         </div>
       `;
     }).join('');
@@ -916,7 +1000,7 @@ class GameApp {
     ctx.fillText('Nhập ít nhất 2 người chơi để dựng làn đua', width / 2, height / 2 - 8);
     ctx.fillStyle = '#4B635B';
     ctx.font = '700 16px system-ui, sans-serif';
-    ctx.fillText('Mỗi người sẽ có một đường riêng, tối đa 12 làn.', width / 2, height / 2 + 24);
+    ctx.fillText('Mỗi người có một làn và một bệ bật nhảy riêng.', width / 2, height / 2 + 24);
   }
 
   drawRace() {
@@ -931,6 +1015,8 @@ class GameApp {
     this.trackBox = this.drawAthleticTrack(ctx, width, height, laneCount, map);
 
     if (this.engine) {
+      this.drawJumpPads(ctx, this.engine.racers, this.trackBox);
+      this.drawVisualEvents(ctx, this.engine.visualEvents, this.trackBox);
       this.drawRacers(ctx, this.engine.racers, this.trackBox);
     }
     this.drawConfetti(ctx);
@@ -990,7 +1076,6 @@ class GameApp {
     ctx.fill('evenodd');
     ctx.restore();
 
-    // Co san o giua de giong san dien kinh.
     ctx.save();
     this.drawEllipse(ctx, cx, cy, innerRx * 0.96, innerRy * 0.9);
     const grass = ctx.createLinearGradient(cx - innerRx, cy - innerRy, cx + innerRx, cy + innerRy);
@@ -1000,11 +1085,10 @@ class GameApp {
     ctx.fill();
     ctx.restore();
 
-    // Ke vach lan rieng. Neu nhieu nguoi thi tu dong sinh them lan.
     ctx.save();
     ctx.strokeStyle = '#EEF1FF';
     ctx.lineWidth = 1.4;
-    ctx.globalAlpha = 0.92;
+    ctx.globalAlpha = 0.95;
     for (let i = 0; i <= lanes; i += 1) {
       const t = i / lanes;
       const rx = innerRx + (outerRx - innerRx) * t;
@@ -1014,11 +1098,9 @@ class GameApp {
     }
     ctx.restore();
 
-    // Vach dich o phia duoi, racer phai cham vach nay moi co ket qua.
     ctx.save();
     ctx.strokeStyle = '#FFFFFF';
     ctx.lineWidth = 4;
-    ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(cx, cy + innerRy + 1);
     ctx.lineTo(cx, cy + outerRy - 1);
@@ -1029,19 +1111,6 @@ class GameApp {
     ctx.fillText('FINISH', cx + 45, cy + outerRy - 12);
     ctx.restore();
 
-    // Ve nhanh tat bang duong vang dut net, chi la dau hieu thi giac cho mechanic.
-    ctx.save();
-    ctx.strokeStyle = '#FACC15';
-    ctx.lineWidth = 2.2;
-    ctx.setLineDash([8, 7]);
-    ctx.globalAlpha = 0.9;
-    ctx.beginPath();
-    ctx.moveTo(cx + innerRx * 0.55, cy + innerRy * 0.72);
-    ctx.bezierCurveTo(cx + outerRx * 0.72, cy + innerRy * 0.25, cx + outerRx * 0.68, cy - innerRy * 0.65, cx + innerRx * 0.42, cy - innerRy * 0.9);
-    ctx.stroke();
-    ctx.restore();
-
-    // So lan o gan vach xuat phat.
     ctx.save();
     ctx.fillStyle = '#FFFFFF';
     ctx.font = '800 11px system-ui, sans-serif';
@@ -1074,12 +1143,184 @@ class GameApp {
     };
   }
 
+  drawJumpPads(ctx, racers, track) {
+    for (const racer of racers) {
+      if (!racer.jumpPad) continue;
+      const p = this.getLanePoint(track, racer.lane, racer.jumpPad.progress);
+      const active = racer.jumpPad.activeUntil > (this.engine?.elapsed || 0);
+      this.drawRamp(ctx, p.x, p.y, p.angle, active, racer.jumpPad.result);
+    }
+  }
+
+  drawRamp(ctx, x, y, angle, active, result) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle + Math.PI / 2);
+    ctx.shadowColor = 'rgba(0,0,0,0.22)';
+    ctx.shadowBlur = active ? 16 : 6;
+    ctx.shadowOffsetY = 3;
+    ctx.fillStyle = result === 'fail' ? '#FB7185' : '#2F54D4';
+    ctx.beginPath();
+    ctx.moveTo(-15, 9);
+    ctx.lineTo(18, 4);
+    ctx.lineTo(16, -7);
+    ctx.lineTo(-18, -3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#D8F3FF';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.strokeStyle = active ? '#FACC15' : '#9FE8FF';
+    ctx.lineWidth = 2;
+    for (let i = -9; i <= 9; i += 9) {
+      ctx.beginPath();
+      ctx.moveTo(i, 7);
+      ctx.bezierCurveTo(i - 3, 0, i + 3, -1, i, -7);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  drawVisualEvents(ctx, events, track) {
+    const now = this.engine?.elapsed || 0;
+    for (const event of events) {
+      const p = this.getLanePoint(track, event.lane, event.progress);
+      const age = now - event.createdAt;
+      const remaining = event.until - now;
+      const alpha = clamp(Math.min(age / 0.22, remaining / 0.35), 0, 1);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      if (event.type === 'tornado') this.drawTornado(ctx, p.x, p.y, age);
+      if (event.type === 'wind') this.drawWind(ctx, p.x, p.y, age);
+      if (event.type === 'rock') this.drawRock(ctx, p.x + 10, p.y + 2);
+      if (event.type === 'rampBurst') this.drawRampBurst(ctx, p.x, p.y, age, event.success);
+      if (event.type === 'speed') this.drawSpeedBurst(ctx, p.x, p.y, age);
+      ctx.restore();
+    }
+  }
+
+  drawTornado(ctx, x, y, age) {
+    ctx.save();
+    ctx.translate(x, y - 18);
+    ctx.rotate(age * 2.4);
+    const grad = ctx.createLinearGradient(0, -28, 0, 26);
+    grad.addColorStop(0, 'rgba(160,232,255,0.95)');
+    grad.addColorStop(1, 'rgba(45,148,191,0.9)');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 5; i += 1) {
+      const yy = -25 + i * 11;
+      const rx = 24 - i * 3;
+      ctx.beginPath();
+      ctx.ellipse(0, yy, rx, 5, 0, 0, Math.PI * 1.65);
+      ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(87,201,255,0.3)';
+    ctx.beginPath();
+    ctx.moveTo(-20, -24);
+    ctx.quadraticCurveTo(10, -2, -3, 28);
+    ctx.quadraticCurveTo(28, -2, 20, -26);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawWind(ctx, x, y, age) {
+    ctx.save();
+    ctx.translate(x - 30, y - 8);
+    ctx.strokeStyle = '#E6FCFF';
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 4; i += 1) {
+      const offset = ((age * 38 + i * 18) % 42) - 20;
+      ctx.beginPath();
+      ctx.moveTo(offset, i * 9);
+      ctx.bezierCurveTo(offset + 20, i * 9 - 8, offset + 38, i * 9 + 8, offset + 62, i * 9);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = '#45E0E0';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(10, -6);
+    ctx.bezierCurveTo(28, -18, 45, -3, 66, -10);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  drawRock(ctx, x, y) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.shadowColor = 'rgba(0,0,0,0.25)';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 3;
+    ctx.fillStyle = '#8B8174';
+    ctx.beginPath();
+    ctx.moveTo(-16, 8);
+    ctx.lineTo(-10, -10);
+    ctx.lineTo(5, -15);
+    ctx.lineTo(18, -5);
+    ctx.lineTo(14, 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#F4E8D2';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.beginPath();
+    ctx.moveTo(-7, -8);
+    ctx.lineTo(4, -11);
+    ctx.lineTo(0, -4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  drawRampBurst(ctx, x, y, age, success) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = success ? '#FACC15' : '#FB7185';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 8; i += 1) {
+      const a = i * Math.PI / 4 + age * 0.8;
+      const r1 = 12;
+      const r2 = 22 + Math.sin(age * 8 + i) * 4;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
+      ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  drawSpeedBurst(ctx, x, y, age) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = '#FACC15';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 5; i += 1) {
+      ctx.beginPath();
+      ctx.moveTo(-32 - i * 8 - age * 20, -10 + i * 5);
+      ctx.lineTo(-10 - i * 3, -8 + i * 5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   drawRacers(ctx, racers, track) {
     const now = this.engine?.elapsed || 0;
     for (const racer of racers) {
       const p = this.getLanePoint(track, racer.lane, racer.progress + racer.laneOffset);
       racer.lastPosition = p;
-      racer.trail.push({ x: p.x, y: p.y, at: now, sprint: this.hasEffect(racer, 'finalSprint') || this.hasEffect(racer, 'tailwind') || this.hasEffect(racer, 'shortcutSuccess') });
+      racer.trail.push({
+        x: p.x,
+        y: p.y,
+        at: now,
+        sprint: this.hasEffect(racer, 'finalSprint') || this.hasEffect(racer, 'tailwind') || this.hasEffect(racer, 'jumpSuccess')
+      });
       racer.trail = racer.trail.filter((point) => now - point.at < 0.55);
       this.drawTrail(ctx, racer, now);
     }
@@ -1088,7 +1329,7 @@ class GameApp {
       const p = racer.lastPosition;
       this.drawRacerToken(ctx, racer, p);
       if (racer.bubble && racer.bubble.until > now) {
-        this.drawBubble(ctx, racer.bubble.text, p.x, p.y - 42, racer.bubble.until - now);
+        this.drawBubble(ctx, racer.bubble.text, p.x, p.y - 46, racer.bubble.until - now);
       }
     }
   }
@@ -1115,8 +1356,13 @@ class GameApp {
 
   drawRacerToken(ctx, racer, p) {
     const size = clamp(24 - this.engine.racers.length * 0.35, 18, 23);
+    const paused = racer.hardPauseUntil > this.engine.elapsed;
+    const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
     ctx.save();
     ctx.translate(p.x, p.y);
+    if (wobble) ctx.rotate(Math.sin(this.engine.elapsed * 18 + racer.index) * 0.18);
+    if (paused) ctx.scale(1.12, 0.86);
+
     ctx.fillStyle = 'rgba(0,0,0,0.22)';
     ctx.beginPath();
     ctx.ellipse(0, 11, size * 0.75, size * 0.25, 0, 0, Math.PI * 2);
@@ -1127,7 +1373,7 @@ class GameApp {
     ctx.arc(0, 0, size, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 3;
-    ctx.strokeStyle = racer.animal.color;
+    ctx.strokeStyle = paused ? '#FB7185' : racer.animal.color;
     ctx.stroke();
 
     ctx.font = `${Math.max(16, size * 1.05)}px serif`;
@@ -1152,11 +1398,11 @@ class GameApp {
 
   drawBubble(ctx, text, x, y, remaining) {
     ctx.save();
-    const alpha = clamp(remaining / 0.25, 0, 1);
+    const alpha = clamp(Math.min(1, remaining / 0.35), 0, 1);
     ctx.globalAlpha = alpha;
     ctx.font = '900 13px system-ui, sans-serif';
     const paddingX = 10;
-    const width = Math.min(150, ctx.measureText(text).width + paddingX * 2);
+    const width = Math.min(160, ctx.measureText(text).width + paddingX * 2);
     const height = 30;
     const { width: canvasWidth } = this.getCanvasSize();
     const left = clamp(x - width / 2, 8, canvasWidth - width - 8);
