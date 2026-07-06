@@ -40,3 +40,6 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 - Da tang them kich thuoc nhan vat hien thi tren duong dua de de nhin hon ro ret so voi ban truoc.
 
 - Da tang kich thuoc nhan vat hien thi tren duong dua len xap xi gap doi so voi ban truoc theo yeu cau cuoi cung.
+
+- Da sua huong quay nhan vat muot hon khi vao doan dao chieu, dau nhan vat se huong theo chieu chay tot hon va giam cam giac chong dit.
+- Da lam muot chuyen dong bang cach noi suy giua cac frame sprite de giam giat cuc.
