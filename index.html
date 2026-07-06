@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mint Duck Race Arena</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="page-bg" aria-hidden="true"></div>
+
+  <main class="app-shell">
+    <header class="hero-card">
+      <div>
+        <p class="eyebrow">Casual browser game</p>
+        <h1>Mint Duck Race Arena</h1>
+        <p class="subtitle">Đường đua xui xẻo: rẽ tắt, chen lấn, bứt tốc và lật kèo từng giây.</p>
+      </div>
+      <div class="hero-badge" aria-label="Duck mascot">🦆</div>
+    </header>
+
+    <section class="game-grid">
+      <aside class="setup-card panel-card">
+        <div class="card-head">
+          <div>
+            <p class="section-kicker">Thiết lập ván đua</p>
+            <h2>Danh sách người chơi</h2>
+          </div>
+          <span class="pill">2–12 người</span>
+        </div>
+
+        <label class="input-label" for="playersInput">Mỗi dòng là một người chơi</label>
+        <textarea id="playersInput" spellcheck="false">Khải
+Lan
+Tùng
+Minh
+Vy
+Huy</textarea>
+
+        <div class="quick-row" aria-label="Nut mau nhanh">
+          <button type="button" class="btn btn-soft" data-sample="3">Mẫu 3 người</button>
+          <button type="button" class="btn btn-soft" data-sample="5">Mẫu 5 người</button>
+          <button type="button" class="btn btn-soft" data-sample="8">Mẫu 8 người</button>
+        </div>
+
+        <div class="form-block">
+          <div class="label-row">
+            <label class="input-label" for="mapSelect">Chọn map</label>
+            <button type="button" class="link-btn" id="randomMapBtn">Random map</button>
+          </div>
+          <select id="mapSelect"></select>
+          <p class="field-note">Mỗi map có vòng bầu dục, đoạn hẹp và nhánh rẽ tắt rủi ro cao.</p>
+        </div>
+
+        <div class="form-block">
+          <div class="label-row">
+            <label class="input-label" for="durationRange">Thời gian đua</label>
+            <output id="durationOutput" for="durationRange">30 giây</output>
+          </div>
+          <input id="durationRange" type="range" min="15" max="90" step="5" value="30" />
+          <div class="duration-row">
+            <input id="durationNumber" type="number" min="15" max="90" step="5" value="30" />
+            <span>giây</span>
+          </div>
+        </div>
+
+        <div class="action-stack">
+          <button type="button" class="btn btn-primary" id="startBtn">Bắt đầu cuộc đua</button>
+          <button type="button" class="btn btn-outline" id="replayBtn" disabled>Chơi lại ván vừa rồi</button>
+          <button type="button" class="btn btn-ghost" id="resetNamesBtn">Reset tên</button>
+        </div>
+
+        <div id="setupMessage" class="setup-message" role="status"></div>
+      </aside>
+
+      <section class="arena-column">
+        <div class="race-card panel-card">
+          <div class="race-toolbar">
+            <div>
+              <p class="section-kicker">Đường đua trung tâm</p>
+              <h2 id="mapTitle">Ao Mint May Rủi</h2>
+            </div>
+            <div class="race-clock" aria-label="Dong ho cuoc dua">
+              <span id="clockLabel">00:30</span>
+              <small>còn lại</small>
+            </div>
+          </div>
+
+          <div class="canvas-wrap" id="canvasWrap">
+            <canvas id="raceCanvas" width="1100" height="620" aria-label="Duong dua" role="img"></canvas>
+            <div class="race-status" id="raceStatus">Nhập tên và bấm bắt đầu để vào đường đua.</div>
+          </div>
+        </div>
+
+        <div class="ticker-card panel-card">
+          <div class="ticker-head">
+            <span class="live-dot"></span>
+            <strong>Bình luận trực tiếp</strong>
+          </div>
+          <div id="commentaryFeed" class="commentary-feed" aria-live="polite">
+            <p>Chưa có cuộc đua. Sân đang được tưới mint cho trơn nhẹ.</p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="ranking-card panel-card">
+        <div class="card-head">
+          <div>
+            <p class="section-kicker">Realtime</p>
+            <h2>Bảng xếp hạng</h2>
+          </div>
+          <span class="pill pill-yellow" id="playerCountPill">0 tay đua</span>
+        </div>
+        <ol id="rankingList" class="ranking-list"></ol>
+      </aside>
+    </section>
+  </main>
+
+  <div class="result-modal" id="resultModal" aria-hidden="true">
+    <div class="result-card panel-card" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+      <button class="modal-close" type="button" id="closeResultBtn" aria-label="Dong ket qua">×</button>
+      <p class="section-kicker">Kết quả chung cuộc</p>
+      <h2 id="resultTitle">Top đường đua</h2>
+      <div id="podium" class="podium"></div>
+      <button type="button" class="btn btn-primary" id="playAgainFromModalBtn">Chơi lại</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
