@@ -20,3 +20,5 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 - Da bo badge ky thuat RAM only/Reload = Reset.
 - Da them bien mui ten chi huong chay ben le duong dua.
 - Da thu nho va can giua sprite de nhan vat hien full body tren duong dua thay vi bi crop sat.
+
+- Da sua hien thi nhan vat tren duong dua: sprite nho hon, full body de khong con bi che nhau chi con 1 phan co the.
