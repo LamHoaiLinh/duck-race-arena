@@ -26,7 +26,11 @@ const GAME_CONFIG = {
   jumpMinGain: 0.014,
   jumpMaxGain: 0.052,
   trailLife: 0.55,
-  trackBoxPadding: 24
+  trackBoxPadding: 24,
+  runCycleFrames: 8,
+  jumpVisualDuration: 0.48,
+  jumpArcMinPx: 14,
+  jumpArcMaxPx: 28
 };
 
 const SAMPLE_NAMES = {
@@ -191,6 +195,24 @@ const rand = (min, max) => min + Math.random() * (max - min);
 const pick = (items) => items[Math.floor(Math.random() * items.length)];
 const round1 = (value) => Math.round(value * 10) / 10;
 const lerp = (a, b, t) => a + (b - a) * t;
+
+function normalizeAngle(angle) {
+  let a = Number.isFinite(angle) ? angle : 0;
+  while (a > Math.PI) a -= Math.PI * 2;
+  while (a < -Math.PI) a += Math.PI * 2;
+  return a;
+}
+
+function lerpAngle(from, to, t) {
+  const start = Number.isFinite(from) ? from : to;
+  const end = Number.isFinite(to) ? to : 0;
+  return start + normalizeAngle(end - start) * clamp(t, 0, 1);
+}
+
+function easeOutCubic(t) {
+  const x = clamp(Number.isFinite(t) ? t : 0, 0, 1);
+  return 1 - Math.pow(1 - x, 3);
+}
 
 function formatComment(type, racer) {
   return EVENT_COMMENTS[type].replace('{name}', racer.name);
@@ -486,7 +508,7 @@ class RaceEngine {
       const paused = racer.hardPauseUntil > this.elapsed;
       const sprinting = racer.effects.some((effect) => ['finalSprint', 'tailwind', 'jumpSuccess', 'slipstream'].includes(effect.type) && effect.until > this.elapsed);
       const fps = paused ? 0 : (sprinting ? 10 : 7.2);
-      racer.runCyclePhase = (racer.runCyclePhase + dt * fps) % GAME_CONFIG.runCycleFrames;
+      racer.runCyclePhase = ((Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0) + dt * fps) % GAME_CONFIG.runCycleFrames;
 
       if (racer.jumpAnim) {
         const anim = racer.jumpAnim;
@@ -1745,7 +1767,8 @@ class GameApp {
 
     const cyclePhase = Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0;
     const frameIndex = paused ? 0 : (Math.floor(cyclePhase / 2) % 4);
-    const framePath = racer.character.frames[frameIndex];
+    const safeFrameIndex = Number.isFinite(frameIndex) ? frameIndex : 0;
+    const framePath = racer.character.frames[safeFrameIndex] || racer.character.frames[0];
     const img = this.imageCache.get(framePath);
     const bob = paused ? 0 : Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 1.8;
     const stride = paused ? 1 : 1 + Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 0.035;
@@ -1765,7 +1788,7 @@ class GameApp {
       ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 6 + bob, drawBox, drawBox);
     } else {
       const size = clamp(62 - this.engine.racers.length * 0.56, 36, 48);
-      this.drawFullDuck(ctx, racer, size, frameIndex, now);
+      this.drawFullDuck(ctx, racer, size, safeFrameIndex, now);
     }
     ctx.restore();
 

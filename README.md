@@ -43,3 +43,6 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 
 - Da sua lai ban cap nhat truoc de dam bao nhan vat hien thi on dinh tren duong dua.
 - Van giu do nghieng nhe khi om cua va cu bat nhay muot hon, nhung toi uu theo huong an toan hon de tranh mat nhan vat.
+
+- Ban sua loi console: bo sung normalizeAngle/lerpAngle/easeOutCubic va config animation bi thieu, de nhan vat hien lai sau khi bam bat dau.
+- Da giu hieu ung nghieng than khi om cua va bat nhay muot hon nhung dam bao khong mat nhan vat.
