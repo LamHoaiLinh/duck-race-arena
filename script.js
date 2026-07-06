@@ -1422,11 +1422,16 @@ class GameApp {
     ];
     signSpecs.forEach((spec) => {
       const base = sampleTrack(track, spec.progress);
+      const next = sampleTrack(track, spec.progress + 0.012);
       const offset = track.trackWidth / 2 + 34;
       const x = base.x + base.nx * offset * spec.side;
       const y = base.y + base.ny * offset * spec.side;
-      let angle = Math.atan2(base.ty, base.tx);
-      if (spec.side < 0) angle += Math.PI;
+
+      // Tinh huong mui ten theo chieu tien cua cuoc dua,
+      // khong lat nguoc theo vi tri bien bao hai ben le nua.
+      const dx = next.x - base.x;
+      const dy = next.y - base.y;
+      const angle = Math.atan2(dy, dx);
       this.drawRoadsideArrow(ctx, x, y, angle);
     });
   }

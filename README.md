@@ -31,3 +31,5 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 - Da doi hien thi tay dua tren duong dua ve dung bo asset nhan vat da chon, khong con tat ca bi ve thanh cung mot kieu vit vector.
 - Da tang kich thuoc nhan vat len muc vua phai de de nhin hon nhung khong che nhau qua muc.
 - Da sua vach dich thanh 1 duong ke duy nhat.
+
+- Da sua huong bien mui ten: mui ten gio se chi dung theo chieu chay thuc te cua duong dua, khong con co bien chi nguoc chieu.
