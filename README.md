@@ -60,3 +60,8 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 - Tat ca PNG da duoc chuan hoa ve kich thuoc canvas 320x320, ten file dung mau frame1.png den frame4.png va thumb.png.
 - Da loc lai nen o vuong/checkerboard va cac dom nen bi sot khi cat anh.
 - Da sua logic xoay/lật: khi nhan vat chay nguoc huong thi lat ngang sprite, khong xoay nguoc 180 do.
+
+## GitHub Pages deploy-safe note
+This package includes `.nojekyll` so GitHub Pages serves static assets directly and does not try to process the site through Jekyll.
+
+- Da cap nhat lai bo nhan vat NV06 theo file anh gui, chuan hoa ve dung bo frame1-4 va thumb, dong thoi can giua tren canvas 320x320 de game hien thi on dinh.
