@@ -27,3 +27,7 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 - Da xoa han badge RAM only / Reload = Reset khoi giao dien.
 
 - Da giam khung/hien thi nhan vat tren duong dua xuong xap xi mot nua de tranh che nhau; kich thuoc hien thi thuc te nho hon ro ret (gan muc ~128x128 tinh theo y tuong anh yeu cau).
+
+- Da doi hien thi tay dua tren duong dua ve dung bo asset nhan vat da chon, khong con tat ca bi ve thanh cung mot kieu vit vector.
+- Da tang kich thuoc nhan vat len muc vua phai de de nhin hon nhung khong che nhau qua muc.
+- Da sua vach dich thanh 1 duong ke duy nhat.

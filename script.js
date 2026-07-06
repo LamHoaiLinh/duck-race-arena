@@ -1388,26 +1388,27 @@ class GameApp {
   drawFinishLine(ctx, track) {
     const base = sampleTrack(track, 0);
     const n = { x: base.nx, y: base.ny };
-    const t = { x: base.tx, y: base.ty };
     const width = track.trackWidth + 8;
-    const strip = 12;
-    const blocks = 8;
-    for (let i = 0; i < blocks; i += 1) {
-      const along = (i - blocks / 2) * strip;
-      const x1 = base.x + n.x * (width / 2) + t.x * along;
-      const y1 = base.y + n.y * (width / 2) + t.y * along;
-      const x2 = base.x - n.x * (width / 2) + t.x * along;
-      const y2 = base.y - n.y * (width / 2) + t.y * along;
-      ctx.strokeStyle = i % 2 === 0 ? '#111111' : '#FFFFFF';
-      ctx.lineWidth = strip;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-    }
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '900 13px system-ui, sans-serif';
-    ctx.fillText('FINISH', base.x + t.x * 30, base.y + t.y * 30);
+    const x1 = base.x + n.x * (width / 2);
+    const y1 = base.y + n.y * (width / 2);
+    const x2 = base.x - n.x * (width / 2);
+    const y2 = base.y - n.y * (width / 2);
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+    ctx.lineWidth = 10;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
   }
 
 
@@ -1679,22 +1680,30 @@ class GameApp {
   }
 
   drawRacerSprite(ctx, racer, p, now) {
-    const size = clamp(9.5 - this.engine.racers.length * 0.12, 6.5, 8.5);
+    const drawBox = clamp(40 - this.engine.racers.length * 0.9, 28, 34);
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
     const frameIndex = paused ? 0 : Math.floor(((now * 8) + racer.index * 0.7) % 4);
+    const framePath = racer.character.frames[frameIndex];
+    const img = this.imageCache.get(framePath);
+    const bob = paused ? 0 : Math.sin(now * 10 + racer.index) * 0.7;
 
     ctx.save();
     ctx.translate(p.x, p.y);
-    ctx.rotate(p.angle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.07 : 0));
-    if (paused) ctx.scale(1.03, 0.95);
+    ctx.rotate(p.angle + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.08 : 0));
+    if (paused) ctx.scale(1.04, 0.94);
 
-    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
     ctx.beginPath();
-    ctx.ellipse(0, size * 0.92, size * 0.54, size * 0.12, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, drawBox * 0.33, drawBox * 0.24, drawBox * 0.08, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    this.drawFullDuck(ctx, racer, size, frameIndex, now);
+    if (img && img.complete) {
+      ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 2 + bob, drawBox, drawBox);
+    } else {
+      const size = clamp(12.5 - this.engine.racers.length * 0.1, 8, 11);
+      this.drawFullDuck(ctx, racer, size, frameIndex, now);
+    }
     ctx.restore();
 
     ctx.save();
@@ -1703,11 +1712,11 @@ class GameApp {
     ctx.textBaseline = 'top';
     const label = racer.name.length > 7 ? `${racer.name.slice(0, 7)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
-    ctx.fillStyle = 'rgba(18,55,42,0.82)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 4, p.y + size + 1, textWidth + 8, 12, 6);
+    ctx.fillStyle = 'rgba(18,55,42,0.84)';
+    this.roundRect(ctx, p.x - textWidth / 2 - 4, p.y + drawBox * 0.30, textWidth + 8, 13, 6);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
-    ctx.fillText(label, p.x, p.y + size + 3);
+    ctx.fillText(label, p.x, p.y + drawBox * 0.30 + 2);
     ctx.restore();
   }
 
