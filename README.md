@@ -52,3 +52,11 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 
 - Da xu ly lai asset de xoa background o vuong/checkerboard con sot xung quanh nhan vat.
 - Da doi cong thuc huong sprite: nhan vat se lat ngang khi chay nguoc huong, nhung van giu than dung nguoi, tranh bi chong nguoc.
+
+
+## Ghi chu cap nhat asset tu file anh gui
+- Da thay asset nv01 va nv03 theo dung thu muc anh gui.
+- File anh gui co thu muc nv04, trong khi anh noi can asset thu tu 6. Em da dua thu muc nv04 do vao slot nv06 de khop voi yeu cau 1, 3, 6.
+- Tat ca PNG da duoc chuan hoa ve kich thuoc canvas 320x320, ten file dung mau frame1.png den frame4.png va thumb.png.
+- Da loc lai nen o vuong/checkerboard va cac dom nen bi sot khi cat anh.
+- Da sua logic xoay/lật: khi nhan vat chay nguoc huong thi lat ngang sprite, khong xoay nguoc 180 do.

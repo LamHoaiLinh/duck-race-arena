@@ -1760,10 +1760,11 @@ class GameApp {
 
     const rawAngle = Number.isFinite(p.angle) ? p.angle : 0;
 
-    // Luon giu sprite o tu the "dung nguoi", khong xoay lat nguoc 180 do.
-    // Neu xe chay ve ben trai thi lat ngang sprite, con goc xoay chi giu trong mien -90..90 do.
+    // Giu nhan vat luon dung than: neu chay ve ben trai thi lat ngang,
+    // goc xoay bi gioi han de khong bi chong nguoc tren doan dao chieu.
     const flipX = Math.cos(rawAngle) < 0 ? -1 : 1;
-    const targetAngle = Math.atan2(Math.sin(rawAngle), Math.abs(Math.cos(rawAngle)));
+    const uprightAngle = Math.atan2(Math.sin(rawAngle), Math.abs(Math.cos(rawAngle)));
+    const targetAngle = clamp(uprightAngle, -0.42, 0.42);
 
     if (!Number.isFinite(racer.renderAngle)) racer.renderAngle = targetAngle;
     racer.renderAngle = lerpAngle(racer.renderAngle, targetAngle, paused ? 0.16 : 0.24);
@@ -1786,12 +1787,12 @@ class GameApp {
     ctx.save();
     ctx.translate(p.x, p.y - (racer.displayLift || 0));
     ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.045 : 0));
-    ctx.scale(flipX * stride, paused ? 0.96 : (1 - Math.abs(racer.bodyLean) * 0.08));
+    ctx.scale(flipX * stride, paused ? 0.96 : (1 - Math.abs(racer.bodyLean) * 0.045));
     if (paused) ctx.scale(1.04, 0.94);
 
     ctx.fillStyle = 'rgba(0,0,0,0.18)';
     ctx.beginPath();
-    ctx.ellipse(0, drawBox * 0.35 + (racer.displayLift || 0) * 0.08, drawBox * 0.28, drawBox * 0.09, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, drawBox * 0.35 + (racer.displayLift || 0) * 0.045, drawBox * 0.28, drawBox * 0.09, 0, 0, Math.PI * 2);
     ctx.fill();
 
     const drawX = -drawBox / 2;
@@ -1849,7 +1850,7 @@ class GameApp {
     ctx.lineTo(-size * 0.92, -size * 0.38);
     ctx.lineTo(-size * 0.84, -size * 0.02);
     ctx.lineTo(-size * 1.02, size * 0.12);
-    ctx.lineTo(-size * 0.64, size * 0.08);
+    ctx.lineTo(-size * 0.64, size * 0.045);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
@@ -1871,7 +1872,7 @@ class GameApp {
     // Wing.
     ctx.fillStyle = palette.wing;
     ctx.beginPath();
-    ctx.ellipse(-size * 0.06, size * 0.08, size * 0.36, size * 0.28, -0.42, 0, Math.PI * 2);
+    ctx.ellipse(-size * 0.06, size * 0.045, size * 0.36, size * 0.28, -0.42, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
@@ -1896,7 +1897,7 @@ class GameApp {
     ctx.moveTo(size * 0.76, -size * 0.24);
     ctx.lineTo(size * 1.14, -size * 0.12);
     ctx.lineTo(size * 0.78, size * 0.02);
-    ctx.quadraticCurveTo(size * 0.58, -size * 0.08, size * 0.76, -size * 0.24);
+    ctx.quadraticCurveTo(size * 0.58, -size * 0.045, size * 0.76, -size * 0.24);
     ctx.fill();
     ctx.stroke();
     ctx.beginPath();
@@ -1922,7 +1923,7 @@ class GameApp {
     // Headband.
     ctx.fillStyle = palette.band;
     ctx.strokeStyle = palette.outline;
-    ctx.lineWidth = Math.max(1.0, size * 0.08);
+    ctx.lineWidth = Math.max(1.0, size * 0.045);
     ctx.beginPath();
     ctx.moveTo(size * 0.18, -size * 0.48);
     ctx.quadraticCurveTo(size * 0.50, -size * 0.70, size * 0.84, -size * 0.52);
@@ -1941,7 +1942,7 @@ class GameApp {
     ctx.beginPath();
     ctx.moveTo(size * 0.24, -size * 0.39);
     ctx.lineTo(-size * 0.01, -size * 0.18 + ribbonWave * 0.6);
-    ctx.lineTo(size * 0.08, -size * 0.04 + ribbonWave * 0.6);
+    ctx.lineTo(size * 0.045, -size * 0.04 + ribbonWave * 0.6);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
