@@ -1685,13 +1685,13 @@ class GameApp {
   }
 
   drawRacerSprite(ctx, racer, p, now) {
-    const drawBox = clamp(76 - this.engine.racers.length * 1.6, 48, 64);
+    const drawBox = clamp(116 - this.engine.racers.length * 2.2, 72, 92);
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
     const frameIndex = paused ? 0 : Math.floor(((now * 8) + racer.index * 0.7) % 4);
     const framePath = racer.character.frames[frameIndex];
     const img = this.imageCache.get(framePath);
-    const bob = paused ? 0 : Math.sin(now * 10 + racer.index) * 0.9;
+    const bob = paused ? 0 : Math.sin(now * 10 + racer.index) * 1.1;
 
     ctx.save();
     ctx.translate(p.x, p.y);
@@ -1700,25 +1700,25 @@ class GameApp {
 
     ctx.fillStyle = 'rgba(0,0,0,0.18)';
     ctx.beginPath();
-    ctx.ellipse(0, drawBox * 0.34, drawBox * 0.25, drawBox * 0.085, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, drawBox * 0.35, drawBox * 0.28, drawBox * 0.09, 0, 0, Math.PI * 2);
     ctx.fill();
 
     if (img && img.complete) {
-      ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 3 + bob, drawBox, drawBox);
+      ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 4 + bob, drawBox, drawBox);
     } else {
-      const size = clamp(23 - this.engine.racers.length * 0.22, 14, 19);
+      const size = clamp(31 - this.engine.racers.length * 0.28, 18, 24);
       this.drawFullDuck(ctx, racer, size, frameIndex, now);
     }
     ctx.restore();
 
     ctx.save();
-    ctx.font = '800 9px system-ui, sans-serif';
+    ctx.font = '800 10px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const label = racer.name.length > 8 ? `${racer.name.slice(0, 8)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(18,55,42,0.84)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 5, p.y + drawBox * 0.31, textWidth + 10, 14, 7);
+    this.roundRect(ctx, p.x - textWidth / 2 - 5, p.y + drawBox * 0.31, textWidth + 10, 15, 7);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
     ctx.fillText(label, p.x, p.y + drawBox * 0.31 + 2);

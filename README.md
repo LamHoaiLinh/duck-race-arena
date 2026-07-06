@@ -36,3 +36,5 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 
 - Da tang kich thuoc nhan vat tren duong dua len xap xi gap doi so voi ban truoc de de theo doi hon.
 - Da zoom khung duong dua sat vao hon bang cach giam padding quanh map, giup quan sat gay can hon.
+
+- Da tang them kich thuoc nhan vat hien thi tren duong dua de de nhin hon ro ret so voi ban truoc.
