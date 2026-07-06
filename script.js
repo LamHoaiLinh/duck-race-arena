@@ -1685,13 +1685,13 @@ class GameApp {
   }
 
   drawRacerSprite(ctx, racer, p, now) {
-    const drawBox = clamp(116 - this.engine.racers.length * 2.2, 72, 92);
+    const drawBox = clamp(232 - this.engine.racers.length * 4.4, 144, 184);
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
     const frameIndex = paused ? 0 : Math.floor(((now * 8) + racer.index * 0.7) % 4);
     const framePath = racer.character.frames[frameIndex];
     const img = this.imageCache.get(framePath);
-    const bob = paused ? 0 : Math.sin(now * 10 + racer.index) * 1.1;
+    const bob = paused ? 0 : Math.sin(now * 10 + racer.index) * 1.6;
 
     ctx.save();
     ctx.translate(p.x, p.y);
@@ -1704,24 +1704,24 @@ class GameApp {
     ctx.fill();
 
     if (img && img.complete) {
-      ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 4 + bob, drawBox, drawBox);
+      ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 6 + bob, drawBox, drawBox);
     } else {
-      const size = clamp(31 - this.engine.racers.length * 0.28, 18, 24);
+      const size = clamp(62 - this.engine.racers.length * 0.56, 36, 48);
       this.drawFullDuck(ctx, racer, size, frameIndex, now);
     }
     ctx.restore();
 
     ctx.save();
-    ctx.font = '800 10px system-ui, sans-serif';
+    ctx.font = '800 12px system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const label = racer.name.length > 8 ? `${racer.name.slice(0, 8)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
     ctx.fillStyle = 'rgba(18,55,42,0.84)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 5, p.y + drawBox * 0.31, textWidth + 10, 15, 7);
+    this.roundRect(ctx, p.x - textWidth / 2 - 6, p.y + drawBox * 0.31, textWidth + 12, 18, 8);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
-    ctx.fillText(label, p.x, p.y + drawBox * 0.31 + 2);
+    ctx.fillText(label, p.x, p.y + drawBox * 0.31 + 3);
     ctx.restore();
   }
 
