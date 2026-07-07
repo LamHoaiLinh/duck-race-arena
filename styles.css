@@ -399,7 +399,7 @@ canvas { display: block; width: 100%; height: 100%; }
     grid-template-columns: 56px minmax(0, 1fr);
   }
   .player-char-row select { grid-column: 1 / -1; }
-  .canvas-frame { min-height: 320px; }
+  .canvas-frame { min-height: 0; aspect-ratio: 4 / 3; }
   .podium-item { grid-template-columns: 52px 1fr; }
   .podium-time { grid-column: 2 / 3; text-align: left; }
 }

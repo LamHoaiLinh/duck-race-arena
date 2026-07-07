@@ -70,3 +70,9 @@ This package includes `.nojekyll` so GitHub Pages serves static assets directly 
 - Cac bo nv01-nv05, nv07-nv15 da duoc chuan hoa ve cung canvas 320x320, can giua va cung baseline de giam hien tuong chop/nhay khi chay.
 - NV06 duoc giu theo bo anh gui rieng truoc do.
 - Engine da duoc doi sang 5 frame/chuky de doc du bo sprite moi.
+
+- Ban sua mobile: nhan vat tu co theo laneWidth, cao khoang 2.05 lan be rong mot lan dua, gioi han 30-64px.
+- Sua track responsive, khong con dung trackWidth co dinh qua lon lam cac cua chong len nhau tren dien thoai.
+- Sua canvas dung dung kich thuoc CSS thuc thay vi ve 720x420 roi nen xuong.
+- Bo sung frame5 cho NV06/NV16 va kiem tra naturalWidth truoc drawImage, tranh asset 404 lam dung requestAnimationFrame.
+- Them fallback va try/catch render de mot file anh loi khong lam dung toan bo cuoc dua.

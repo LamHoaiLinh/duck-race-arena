@@ -27,7 +27,7 @@ const GAME_CONFIG = {
   jumpMaxGain: 0.052,
   trailLife: 0.55,
   trackBoxPadding: 24,
-  runCycleFrames: 10,
+  runCycleFrames: 5,
   jumpVisualDuration: 0.48,
   jumpArcMinPx: 14,
   jumpArcMaxPx: 28
@@ -272,12 +272,73 @@ function buildClosedSpline(points, stepsPerSegment = 32) {
   return out;
 }
 
+function segmentOrientation(a, b, c) {
+  return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+}
+
+function segmentsIntersect(a, b, c, d) {
+  const o1 = segmentOrientation(a, b, c);
+  const o2 = segmentOrientation(a, b, d);
+  const o3 = segmentOrientation(c, d, a);
+  const o4 = segmentOrientation(c, d, b);
+  return ((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0))
+    && ((o3 > 0 && o4 < 0) || (o3 < 0 && o4 > 0));
+}
+
+function untangleClosedPath(points) {
+  const out = points.map((p) => ({ ...p }));
+  const n = out.length;
+  let changed = true;
+  let guard = 0;
+
+  while (changed && guard < n * n) {
+    changed = false;
+    guard += 1;
+    for (let i = 0; i < n; i += 1) {
+      const i2 = (i + 1) % n;
+      for (let j = i + 2; j < n; j += 1) {
+        const j2 = (j + 1) % n;
+        if (i === j2 || i2 === j) continue;
+        if (segmentsIntersect(out[i], out[i2], out[j], out[j2])) {
+          const start = i2;
+          const end = j;
+          const reversed = out.slice(start, end + 1).reverse();
+          out.splice(start, reversed.length, ...reversed);
+          changed = true;
+          break;
+        }
+      }
+      if (changed) break;
+    }
+  }
+  return out;
+}
+
+function buildClosedChaikin(points, iterations = 3) {
+  let current = points.map((p) => ({ ...p }));
+  for (let k = 0; k < iterations; k += 1) {
+    const next = [];
+    for (let i = 0; i < current.length; i += 1) {
+      const a = current[i];
+      const b = current[(i + 1) % current.length];
+      next.push({ x: a.x * 0.75 + b.x * 0.25, y: a.y * 0.75 + b.y * 0.25 });
+      next.push({ x: a.x * 0.25 + b.x * 0.75, y: a.y * 0.25 + b.y * 0.75 });
+    }
+    current = next;
+  }
+  return current;
+}
+
 function buildTrackGeometry(width, height, laneCount, map) {
   const pad = GAME_CONFIG.trackBoxPadding;
   const boxW = width - pad * 2;
   const boxH = height - pad * 2;
   const pathPoints = map.points.map(([px, py]) => ({ x: pad + px * boxW, y: pad + py * boxH }));
-  const samples = buildClosedSpline(pathPoints, 34);
+
+  // Bo giao diem cua centerline truoc khi lam muot.
+  // Ban cu dung spline tren duong tu cat nhau nen track bi ve de/chong lop, nhat la tren mobile.
+  const simplePath = untangleClosedPath(pathPoints);
+  const samples = buildClosedChaikin(simplePath, 4);
 
   let totalLength = 0;
   const enriched = samples.map((point, index) => {
@@ -299,7 +360,12 @@ function buildTrackGeometry(width, height, laneCount, map) {
   }
   totalLength += Math.hypot(enriched[0].x - enriched[enriched.length - 1].x, enriched[0].y - enriched[enriched.length - 1].y);
 
-  const trackWidth = clamp(150 - laneCount * 4.2, 92, 140);
+  // Be rong duong dua thay doi theo kich thuoc canvas va so nguoi choi.
+  // Ban cu dung be rong co dinh 92-140px nen tren man hinh nho cac cua de bi de/chong len nhau.
+  const minDim = Math.min(width, height);
+  const preferredLaneWidth = clamp(minDim * 0.032, 10, 18);
+  const maxTrackWidth = clamp(minDim * 0.245, 62, 116);
+  const trackWidth = clamp(preferredLaneWidth * laneCount, 58, maxTrackWidth);
   const laneWidth = trackWidth / laneCount;
 
   return {
@@ -911,6 +977,8 @@ class GameApp {
     CHARACTER_DATA.forEach((character) => {
       [character.thumb, ...character.frames].forEach((path) => {
         const img = new Image();
+        img.decoding = 'async';
+        img.onerror = () => { img.dataset.loadFailed = '1'; };
         img.src = path;
         this.imageCache.set(path, img);
       });
@@ -1274,13 +1342,27 @@ class GameApp {
     const frame = canvas.parentElement;
     const rect = frame.getBoundingClientRect();
     const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-    const width = Math.max(720, Math.floor(rect.width));
-    const height = Math.max(420, Math.floor(rect.height));
-    canvas.width = Math.floor(width * dpr);
-    canvas.height = Math.floor(height * dpr);
+
+    // Dung he toa do trung voi kich thuoc hien thi thuc.
+    // Gan chieu cao ro rang de canvas khong tu lay intrinsic height va keo dai bat thuong tren iPhone.
+    const width = Math.max(300, Math.round(rect.width || 720));
+    const mobile = width <= 720;
+    const height = mobile
+      ? Math.round(clamp(width * 0.75, 270, 420))
+      : Math.round(clamp(width * 0.5625, 400, 720));
+
+    frame.style.height = `${height}px`;
+    frame.style.minHeight = `${height}px`;
+
+    const pixelWidth = Math.round(width * dpr);
+    const pixelHeight = Math.round(height * dpr);
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+      canvas.width = pixelWidth;
+      canvas.height = pixelHeight;
+    }
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    canvas.dataset.cssWidth = width;
-    canvas.dataset.cssHeight = height;
+    canvas.dataset.cssWidth = String(width);
+    canvas.dataset.cssHeight = String(height);
     this.drawRace();
   }
 
@@ -1296,7 +1378,12 @@ class GameApp {
     }
 
     this.updateConfetti(dt);
-    this.drawRace();
+    try {
+      this.drawRace();
+    } catch (error) {
+      console.error('Loi ve canvas:', error);
+      // Van tiep tuc game; frame sau se dung fallback neu asset loi.
+    }
     this.animationId = requestAnimationFrame((nextTime) => this.loop(nextTime));
   }
 
@@ -1754,14 +1841,15 @@ class GameApp {
   }
 
   drawRacerSprite(ctx, racer, p, now) {
-    const drawBox = clamp(232 - this.engine.racers.length * 4.4, 144, 184);
+    const laneWidth = Math.max(1, this.trackGeometry?.laneWidth || 22);
+
+    // Chieu cao nhan vat xap xi gap doi be rong mot lan dua.
+    // Co min/max nhe de van doc duoc tren mobile va khong che kin duong dua tren desktop.
+    const drawBox = clamp(laneWidth * 2.05, 30, 64);
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
 
-    const rawAngle = Number.isFinite(p.angle) ? p.angle : 0;
-
-    // Giu nhan vat luon dung than: neu chay ve ben trai thi lat ngang,
-    // goc xoay bi gioi han de khong bi chong nguoc tren doan dao chieu.
+    const rawAngle = Number.isFinite(p?.angle) ? p.angle : 0;
     const flipX = Math.cos(rawAngle) < 0 ? -1 : 1;
     const uprightAngle = Math.atan2(Math.sin(rawAngle), Math.abs(Math.cos(rawAngle)));
     const targetAngle = clamp(uprightAngle, -0.42, 0.42);
@@ -1769,63 +1857,52 @@ class GameApp {
     if (!Number.isFinite(racer.renderAngle)) racer.renderAngle = targetAngle;
     racer.renderAngle = lerpAngle(racer.renderAngle, targetAngle, paused ? 0.16 : 0.24);
 
-    const targetLean = clamp((p.turn || 0) * 3.8, -0.20, 0.20);
+    const targetLean = clamp((p?.turn || 0) * 3.2, -0.16, 0.16);
     racer.bodyLean = lerp(racer.bodyLean || 0, targetLean, paused ? 0.10 : 0.18);
 
-    const cyclePhase = Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0;
     const totalFrames = Math.max(1, racer.character.frames.length || 1);
-    const virtualFrame = paused ? 0 : (cyclePhase / 2);
-    const baseFrame = Math.floor(virtualFrame) % totalFrames;
-    const nextFrame = (baseFrame + 1) % totalFrames;
-    const blend = paused ? 0 : (virtualFrame - Math.floor(virtualFrame));
-    const framePathA = racer.character.frames[baseFrame] || racer.character.frames[0];
-    const framePathB = racer.character.frames[nextFrame] || racer.character.frames[0];
-    const imgA = this.imageCache.get(framePathA);
-    const imgB = this.imageCache.get(framePathB);
-    const bob = paused ? 0 : Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 1.8;
-    const stride = paused ? 1 : 1 + Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 0.035;
+    const cyclePhase = Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0;
+    const frameIndex = paused ? 0 : (Math.floor(cyclePhase) % totalFrames);
+    const framePath = racer.character.frames[frameIndex] || racer.character.frames[0];
+    const img = this.imageCache.get(framePath);
+    const imageReady = Boolean(img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0);
+
+    const wave = Math.sin((cyclePhase / Math.max(1, GAME_CONFIG.runCycleFrames)) * Math.PI * 2);
+    const bob = paused ? 0 : wave * 0.8;
+    const strideX = paused ? 1 : 1 + wave * 0.018;
+    const strideY = paused ? 0.96 : 1 - Math.abs(wave) * 0.012;
+    const lift = Number.isFinite(racer.displayLift) ? racer.displayLift : 0;
 
     ctx.save();
-    ctx.translate(p.x, p.y - (racer.displayLift || 0));
-    ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.045 : 0));
-    ctx.scale(flipX * stride, paused ? 0.96 : (1 - Math.abs(racer.bodyLean) * 0.045));
-    if (paused) ctx.scale(1.04, 0.94);
+    ctx.translate(p.x, p.y - lift);
+    ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.035 : 0));
+    ctx.scale(flipX * strideX, strideY);
+    if (paused) ctx.scale(1.03, 0.95);
 
-    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
     ctx.beginPath();
-    ctx.ellipse(0, drawBox * 0.35 + (racer.displayLift || 0) * 0.045, drawBox * 0.28, drawBox * 0.09, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, drawBox * 0.34 + lift * 0.04, drawBox * 0.26, drawBox * 0.075, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const drawX = -drawBox / 2;
-    const drawY = -drawBox / 2 - 6 + bob;
-    if (imgA && imgA.complete) {
-      ctx.save();
-      ctx.globalAlpha = paused ? 1 : (1 - blend);
-      ctx.drawImage(imgA, drawX, drawY, drawBox, drawBox);
-      ctx.restore();
-    }
-    if (!paused && imgB && imgB.complete) {
-      ctx.save();
-      ctx.globalAlpha = blend;
-      ctx.drawImage(imgB, drawX, drawY, drawBox, drawBox);
-      ctx.restore();
-    }
-
-    if ((!imgA || !imgA.complete) && (!imgB || !imgB.complete)) {
-      const size = clamp(62 - this.engine.racers.length * 0.56, 36, 48);
-      this.drawFullDuck(ctx, racer, size, baseFrame % 4, now);
+    if (imageReady) {
+      ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 2 + bob, drawBox, drawBox);
+    } else {
+      const fallbackSize = clamp(drawBox * 0.31, 10, 20);
+      this.drawFullDuck(ctx, racer, fallbackSize, frameIndex % 4, now);
     }
     ctx.restore();
 
     ctx.save();
-    ctx.font = '800 12px system-ui, sans-serif';
+    const fontSize = clamp(laneWidth * 0.62, 9, 11);
+    ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const label = racer.name.length > 8 ? `${racer.name.slice(0, 8)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
-    const labelY = p.y + drawBox * 0.31 - (racer.displayLift || 0);
-    ctx.fillStyle = 'rgba(18,55,42,0.84)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 6, labelY, textWidth + 12, 18, 8);
+    const labelHeight = fontSize + 7;
+    const labelY = p.y + drawBox * 0.31 - lift;
+    ctx.fillStyle = 'rgba(18,55,42,0.86)';
+    this.roundRect(ctx, p.x - textWidth / 2 - 4, labelY, textWidth + 8, labelHeight, labelHeight / 2);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
     ctx.fillText(label, p.x, labelY + 3);
