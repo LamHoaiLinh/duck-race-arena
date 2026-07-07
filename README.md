@@ -76,3 +76,17 @@ This package includes `.nojekyll` so GitHub Pages serves static assets directly 
 - Sua canvas dung dung kich thuoc CSS thuc thay vi ve 720x420 roi nen xuong.
 - Bo sung frame5 cho NV06/NV16 va kiem tra naturalWidth truoc drawImage, tranh asset 404 lam dung requestAnimationFrame.
 - Them fallback va try/catch render de mot file anh loi khong lam dung toan bo cuoc dua.
+
+
+## Ban Easy Plus
+- Qua nua thoi gian: nguoi cuoi co 50% co hoi duoc gio tro luc va vuot 1-2 hang; voi 2-3 nguoi co the vuot len hang 1.
+- Qua nua thoi gian: nguoi dang dan dau co 50% nguy co tut dung 1 hang.
+- Bam truc tiep avatar trong thu vien de mo danh sach nguoi choi va gan nhanh.
+- Khi bam Bat dau, bang tuy chinh nhan vat tu dong an.
+- Nut Bat dau, Choi lai va Doi map nam ngay tren khung dua.
+- Bang xep hang realtime va ket qua cuoi deu hien avatar.
+- Them 5 map kho: Clover Gauntlet, Scorpion Tail, Thunderbolt Maze, Crown Circuit, Alien Orbit.
+
+- Da kiem tra cu phap JavaScript bang node --check; 15 map deu tao duoc track geometry hop le; day du 16 bo asset nhan vat, moi bo co thumb va 5 frame.
+
+- Da them nhan vat moi NV17 (Tho Hong) tu bo asset anh gui, gom 5 frame va thumb, da can giua va chuan hoa kich thuoc de game hien thi on dinh.
