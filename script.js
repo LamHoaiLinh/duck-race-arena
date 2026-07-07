@@ -27,7 +27,7 @@ const GAME_CONFIG = {
   jumpMaxGain: 0.052,
   trailLife: 0.55,
   trackBoxPadding: 24,
-  runCycleFrames: 8,
+  runCycleFrames: 10,
   jumpVisualDuration: 0.48,
   jumpArcMinPx: 14,
   jumpArcMaxPx: 28
@@ -45,7 +45,7 @@ const CHARACTER_DATA = Array.from({ length: 16 }, (_, i) => {
     id,
     label: `NV ${String(i + 1).padStart(2, '0')}`,
     thumb: `assets/animals/${id}/thumb.png`,
-    frames: [1, 2, 3, 4].map((frame) => `assets/animals/${id}/frame${frame}.png`)
+    frames: [1, 2, 3, 4, 5].map((frame) => `assets/animals/${id}/frame${frame}.png`)
   };
 });
 
@@ -1773,9 +1773,10 @@ class GameApp {
     racer.bodyLean = lerp(racer.bodyLean || 0, targetLean, paused ? 0.10 : 0.18);
 
     const cyclePhase = Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0;
+    const totalFrames = Math.max(1, racer.character.frames.length || 1);
     const virtualFrame = paused ? 0 : (cyclePhase / 2);
-    const baseFrame = Math.floor(virtualFrame) % 4;
-    const nextFrame = (baseFrame + 1) % 4;
+    const baseFrame = Math.floor(virtualFrame) % totalFrames;
+    const nextFrame = (baseFrame + 1) % totalFrames;
     const blend = paused ? 0 : (virtualFrame - Math.floor(virtualFrame));
     const framePathA = racer.character.frames[baseFrame] || racer.character.frames[0];
     const framePathB = racer.character.frames[nextFrame] || racer.character.frames[0];
@@ -1812,7 +1813,7 @@ class GameApp {
 
     if ((!imgA || !imgA.complete) && (!imgB || !imgB.complete)) {
       const size = clamp(62 - this.engine.racers.length * 0.56, 36, 48);
-      this.drawFullDuck(ctx, racer, size, baseFrame, now);
+      this.drawFullDuck(ctx, racer, size, baseFrame % 4, now);
     }
     ctx.restore();
 

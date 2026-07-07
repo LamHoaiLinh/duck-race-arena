@@ -65,3 +65,8 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 This package includes `.nojekyll` so GitHub Pages serves static assets directly and does not try to process the site through Jekyll.
 
 - Da cap nhat lai bo nhan vat NV06 theo file anh gui, chuan hoa ve dung bo frame1-4 va thumb, dong thoi can giua tren canvas 320x320 de game hien thi on dinh.
+
+- Da cap nhat hang loat asset nhan vat theo bo 'sprite sheet.zip' anh gui.
+- Cac bo nv01-nv05, nv07-nv15 da duoc chuan hoa ve cung canvas 320x320, can giua va cung baseline de giam hien tuong chop/nhay khi chay.
+- NV06 duoc giu theo bo anh gui rieng truoc do.
+- Engine da duoc doi sang 5 frame/chuky de doc du bo sprite moi.
