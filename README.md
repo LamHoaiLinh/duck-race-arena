@@ -65,3 +65,36 @@ Ban cap nhat nay da sua cac diem anh yeu cau:
 This package includes `.nojekyll` so GitHub Pages serves static assets directly and does not try to process the site through Jekyll.
 
 - Da cap nhat lai bo nhan vat NV06 theo file anh gui, chuan hoa ve dung bo frame1-4 va thumb, dong thoi can giua tren canvas 320x320 de game hien thi on dinh.
+
+- Da cap nhat hang loat asset nhan vat theo bo 'sprite sheet.zip' anh gui.
+- Cac bo nv01-nv05, nv07-nv15 da duoc chuan hoa ve cung canvas 320x320, can giua va cung baseline de giam hien tuong chop/nhay khi chay.
+- NV06 duoc giu theo bo anh gui rieng truoc do.
+- Engine da duoc doi sang 5 frame/chuky de doc du bo sprite moi.
+
+- Ban sua mobile: nhan vat tu co theo laneWidth, cao khoang 2.05 lan be rong mot lan dua, gioi han 30-64px.
+- Sua track responsive, khong con dung trackWidth co dinh qua lon lam cac cua chong len nhau tren dien thoai.
+- Sua canvas dung dung kich thuoc CSS thuc thay vi ve 720x420 roi nen xuong.
+- Bo sung frame5 cho NV06/NV16 va kiem tra naturalWidth truoc drawImage, tranh asset 404 lam dung requestAnimationFrame.
+- Them fallback va try/catch render de mot file anh loi khong lam dung toan bo cuoc dua.
+
+
+## Ban Easy Plus
+- Qua nua thoi gian: nguoi cuoi co 50% co hoi duoc gio tro luc va vuot 1-2 hang; voi 2-3 nguoi co the vuot len hang 1.
+- Qua nua thoi gian: nguoi dang dan dau co 50% nguy co tut dung 1 hang.
+- Bam truc tiep avatar trong thu vien de mo danh sach nguoi choi va gan nhanh.
+- Khi bam Bat dau, bang tuy chinh nhan vat tu dong an.
+- Nut Bat dau, Choi lai va Doi map nam ngay tren khung dua.
+- Bang xep hang realtime va ket qua cuoi deu hien avatar.
+- Them 5 map kho: Clover Gauntlet, Scorpion Tail, Thunderbolt Maze, Crown Circuit, Alien Orbit.
+
+- Da kiem tra cu phap JavaScript bang node --check; 15 map deu tao duoc track geometry hop le; day du 16 bo asset nhan vat, moi bo co thumb va 5 frame.
+
+- Da them nhan vat moi NV17 (Tho Hong) tu bo asset anh gui, gom 5 frame va thumb, da can giua va chuan hoa kich thuoc de game hien thi on dinh.
+<<<<<<< HEAD
+
+- Da them 5 nhan vat moi: Meo trang (NV18), Chim canh cut (NV19), Cho trang (NV20), Khi nau (NV21), Ky lan (NV22). Tat ca da duoc scale va can baseline theo chuan game.
+- Nut Reset ten nay co hop thoai xac nhan de tranh bam nham khi cuon man hinh.
+- Man hinh ket qua hien thi toan bo thu hang, khong con gioi han Top 3.
+- Bang xep hang live da duoc dua vao cung card duong dua va mo rong full chieu ngang, bo cuc gon hon.
+=======
+>>>>>>> e284845503634616a1f1a983d82e9df53aea45a3

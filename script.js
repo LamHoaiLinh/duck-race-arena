@@ -27,10 +27,15 @@ const GAME_CONFIG = {
   jumpMaxGain: 0.052,
   trailLife: 0.55,
   trackBoxPadding: 24,
-  runCycleFrames: 8,
+  runCycleFrames: 5,
   jumpVisualDuration: 0.48,
   jumpArcMinPx: 14,
-  jumpArcMaxPx: 28
+  jumpArcMaxPx: 28,
+  halfRaceChance: 0.50,
+  comebackMinRanks: 1,
+  comebackMaxRanks: 2,
+  comebackDuration: 2.8,
+  leaderDropDuration: 2.4
 };
 
 const SAMPLE_NAMES = {
@@ -39,13 +44,30 @@ const SAMPLE_NAMES = {
   8: ['Khải', 'Lan', 'Tùng', 'Minh', 'Vy', 'Huy', 'An', 'Bình']
 };
 
-const CHARACTER_DATA = Array.from({ length: 16 }, (_, i) => {
+<<<<<<< HEAD
+const CHARACTER_LABELS = {
+  nv17: 'Thỏ Hồng',
+  nv18: 'Mèo trắng',
+  nv19: 'Chim cánh cụt',
+  nv20: 'Chó trắng',
+  nv21: 'Khỉ nâu',
+  nv22: 'Kỳ lân'
+};
+
+const CHARACTER_DATA = Array.from({ length: 22 }, (_, i) => {
   const id = `nv${String(i + 1).padStart(2, '0')}`;
   return {
     id,
-    label: `NV ${String(i + 1).padStart(2, '0')}`,
+    label: CHARACTER_LABELS[id] || `NV ${String(i + 1).padStart(2, '0')}`,
+=======
+const CHARACTER_DATA = Array.from({ length: 17 }, (_, i) => {
+  const id = `nv${String(i + 1).padStart(2, '0')}`;
+  return {
+    id,
+    label: (i === 16 ? 'Tho Hong' : `NV ${String(i + 1).padStart(2, '0')}`),
+>>>>>>> e284845503634616a1f1a983d82e9df53aea45a3
     thumb: `assets/animals/${id}/thumb.png`,
-    frames: [1, 2, 3, 4].map((frame) => `assets/animals/${id}/frame${frame}.png`)
+    frames: [1, 2, 3, 4, 5].map((frame) => `assets/animals/${id}/frame${frame}.png`)
   };
 });
 
@@ -159,6 +181,41 @@ const MAP_DATA = [
     bgB: '#F4FFFA',
     accent: '#8FD6B7',
     points: [[0.11,0.66],[0.18,0.28],[0.34,0.22],[0.44,0.42],[0.31,0.55],[0.44,0.69],[0.63,0.63],[0.83,0.26],[0.90,0.50],[0.80,0.78],[0.60,0.84],[0.51,0.70],[0.39,0.84],[0.20,0.82]]
+  },
+  {
+    id: 'clover-gauntlet',
+    name: 'Clover Gauntlet ★',
+    description: 'Bốn thùy như cỏ bốn lá, nhiều cua đổi hướng nhanh và khoảng cách ngắn khó đoán.',
+    bgA: '#CFF5DF', bgB: '#F4FFF9', accent: '#65BE95',
+    points: [[0.10,0.57],[0.13,0.30],[0.28,0.15],[0.43,0.27],[0.52,0.11],[0.72,0.14],[0.89,0.32],[0.77,0.50],[0.91,0.68],[0.78,0.87],[0.58,0.81],[0.48,0.65],[0.33,0.87],[0.14,0.78]]
+  },
+  {
+    id: 'scorpion-tail',
+    name: 'Scorpion Tail ★',
+    description: 'Đầu rộng, eo hẹp và đuôi móc ngược; đoạn cuối cực khó giữ vị trí.',
+    bgA: '#D5F1DA', bgB: '#F5FFF8', accent: '#82B98E',
+    points: [[0.10,0.70],[0.12,0.34],[0.30,0.15],[0.55,0.18],[0.79,0.14],[0.90,0.35],[0.80,0.53],[0.60,0.47],[0.52,0.66],[0.70,0.82],[0.88,0.72],[0.81,0.91],[0.48,0.87],[0.28,0.72],[0.17,0.88]]
+  },
+  {
+    id: 'thunderbolt-maze',
+    name: 'Thunderbolt Maze ★',
+    description: 'Đường tia chớp nhiều góc gãy, liên tục đổi nhịp và dễ lật hạng ở nửa sau.',
+    bgA: '#D8F6E6', bgB: '#F6FFFB', accent: '#68C6A0',
+    points: [[0.09,0.75],[0.18,0.22],[0.36,0.36],[0.48,0.14],[0.61,0.39],[0.82,0.18],[0.91,0.45],[0.70,0.55],[0.86,0.82],[0.59,0.69],[0.45,0.89],[0.31,0.62],[0.16,0.88]]
+  },
+  {
+    id: 'crown-circuit',
+    name: 'Crown Circuit ★',
+    description: 'Ba đỉnh nhọn như vương miện, xen kẽ đáy sâu tạo cảm giác lên xuống liên tục.',
+    bgA: '#D9F2E0', bgB: '#F7FFF9', accent: '#97C776',
+    points: [[0.09,0.72],[0.15,0.38],[0.27,0.12],[0.40,0.38],[0.51,0.10],[0.63,0.38],[0.76,0.13],[0.89,0.38],[0.91,0.69],[0.76,0.87],[0.57,0.72],[0.40,0.88],[0.23,0.72]]
+  },
+  {
+    id: 'alien-orbit',
+    name: 'Alien Orbit ★',
+    description: 'Quỹ đạo bất đối xứng kiểu hành tinh lạ, cua ngắn nối cua dài rất khó giữ nhịp.',
+    bgA: '#D7F0ED', bgB: '#F3FFFC', accent: '#83BFC0',
+    points: [[0.10,0.60],[0.16,0.25],[0.39,0.13],[0.58,0.27],[0.76,0.12],[0.91,0.34],[0.82,0.55],[0.91,0.78],[0.68,0.88],[0.55,0.68],[0.37,0.86],[0.16,0.77],[0.28,0.55]]
   }
 ];
 
@@ -172,7 +229,9 @@ const EVENT_COMMENTS = {
   jumpSuccess: '{name} bật qua bệ nhảy và bay xa thêm một đoạn!',
   jumpFail: '{name} đạp bệ nhảy lỗi nhịp, bị chậm lại!',
   slipstream: '{name} đang đu bám người phía trước để lấy đà!',
-  finalSprint: '{name} đang bứt tốc ở những giây cuối!'
+  finalSprint: '{name} đang bứt tốc ở những giây cuối!',
+  comebackWind: '{name} được luồng gió may mắn nâng lên mạnh mẽ và vượt hạng!',
+  leaderDrop: '{name} gặp áp lực khi dẫn đầu và tụt xuống một hạng!'
 };
 
 const EVENT_BUBBLES = {
@@ -185,7 +244,9 @@ const EVENT_BUBBLES = {
   jumpSuccess: 'Bật nhảy!',
   jumpFail: 'Lỗi nhịp!',
   slipstream: 'Đu bám!',
-  finalSprint: 'Bứt tốc!'
+  finalSprint: 'Bứt tốc!',
+  comebackWind: 'Gió trợ lực!',
+  leaderDrop: 'Mất nhịp!'
 };
 
 const qs = (selector) => document.querySelector(selector);
@@ -272,12 +333,73 @@ function buildClosedSpline(points, stepsPerSegment = 32) {
   return out;
 }
 
+function segmentOrientation(a, b, c) {
+  return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+}
+
+function segmentsIntersect(a, b, c, d) {
+  const o1 = segmentOrientation(a, b, c);
+  const o2 = segmentOrientation(a, b, d);
+  const o3 = segmentOrientation(c, d, a);
+  const o4 = segmentOrientation(c, d, b);
+  return ((o1 > 0 && o2 < 0) || (o1 < 0 && o2 > 0))
+    && ((o3 > 0 && o4 < 0) || (o3 < 0 && o4 > 0));
+}
+
+function untangleClosedPath(points) {
+  const out = points.map((p) => ({ ...p }));
+  const n = out.length;
+  let changed = true;
+  let guard = 0;
+
+  while (changed && guard < n * n) {
+    changed = false;
+    guard += 1;
+    for (let i = 0; i < n; i += 1) {
+      const i2 = (i + 1) % n;
+      for (let j = i + 2; j < n; j += 1) {
+        const j2 = (j + 1) % n;
+        if (i === j2 || i2 === j) continue;
+        if (segmentsIntersect(out[i], out[i2], out[j], out[j2])) {
+          const start = i2;
+          const end = j;
+          const reversed = out.slice(start, end + 1).reverse();
+          out.splice(start, reversed.length, ...reversed);
+          changed = true;
+          break;
+        }
+      }
+      if (changed) break;
+    }
+  }
+  return out;
+}
+
+function buildClosedChaikin(points, iterations = 3) {
+  let current = points.map((p) => ({ ...p }));
+  for (let k = 0; k < iterations; k += 1) {
+    const next = [];
+    for (let i = 0; i < current.length; i += 1) {
+      const a = current[i];
+      const b = current[(i + 1) % current.length];
+      next.push({ x: a.x * 0.75 + b.x * 0.25, y: a.y * 0.75 + b.y * 0.25 });
+      next.push({ x: a.x * 0.25 + b.x * 0.75, y: a.y * 0.25 + b.y * 0.75 });
+    }
+    current = next;
+  }
+  return current;
+}
+
 function buildTrackGeometry(width, height, laneCount, map) {
   const pad = GAME_CONFIG.trackBoxPadding;
   const boxW = width - pad * 2;
   const boxH = height - pad * 2;
   const pathPoints = map.points.map(([px, py]) => ({ x: pad + px * boxW, y: pad + py * boxH }));
-  const samples = buildClosedSpline(pathPoints, 34);
+
+  // Bo giao diem cua centerline truoc khi lam muot.
+  // Ban cu dung spline tren duong tu cat nhau nen track bi ve de/chong lop, nhat la tren mobile.
+  const simplePath = untangleClosedPath(pathPoints);
+  const samples = buildClosedChaikin(simplePath, 4);
 
   let totalLength = 0;
   const enriched = samples.map((point, index) => {
@@ -299,7 +421,12 @@ function buildTrackGeometry(width, height, laneCount, map) {
   }
   totalLength += Math.hypot(enriched[0].x - enriched[enriched.length - 1].x, enriched[0].y - enriched[enriched.length - 1].y);
 
-  const trackWidth = clamp(150 - laneCount * 4.2, 92, 140);
+  // Be rong duong dua thay doi theo kich thuoc canvas va so nguoi choi.
+  // Ban cu dung be rong co dinh 92-140px nen tren man hinh nho cac cua de bi de/chong len nhau.
+  const minDim = Math.min(width, height);
+  const preferredLaneWidth = clamp(minDim * 0.032, 10, 18);
+  const maxTrackWidth = clamp(minDim * 0.245, 62, 116);
+  const trackWidth = clamp(preferredLaneWidth * laneCount, 58, maxTrackWidth);
   const laneWidth = trackWidth / laneCount;
 
   return {
@@ -394,6 +521,7 @@ class RaceEngine {
     this.visualEvents = [];
     this.tieMode = false;
     this.tieIds = [];
+    this.halfRaceTwistDone = false;
     this.racers = this.createRacers(names, characters);
     this.assignFairFinishTimes();
     this.assignFairJumpPads();
@@ -496,6 +624,7 @@ class RaceEngine {
     this.elapsed += dt;
     this.visualEvents = this.visualEvents.filter((event) => event.until > this.elapsed);
     this.updateRacers(dt);
+    this.handleHalfRaceTwist();
     this.checkJumpPadCollisions();
     this.handleScheduledEvent();
     this.checkFinish();
@@ -506,7 +635,7 @@ class RaceEngine {
     for (const racer of this.racers) {
       if (!Number.isFinite(racer.displayProgress)) racer.displayProgress = racer.progress;
       const paused = racer.hardPauseUntil > this.elapsed;
-      const sprinting = racer.effects.some((effect) => ['finalSprint', 'tailwind', 'jumpSuccess', 'slipstream'].includes(effect.type) && effect.until > this.elapsed);
+      const sprinting = racer.effects.some((effect) => ['finalSprint', 'tailwind', 'jumpSuccess', 'slipstream', 'comebackWind'].includes(effect.type) && effect.until > this.elapsed);
       const fps = paused ? 0 : (sprinting ? 10 : 7.2);
       racer.runCyclePhase = ((Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0) + dt * fps) % GAME_CONFIG.runCycleFrames;
 
@@ -559,6 +688,62 @@ class RaceEngine {
       if (this.elapsed >= racer.targetFinishTime && racer.progress < 1) {
         racer.progress = Math.min(1, racer.progress + dt * 0.72);
       }
+    }
+  }
+
+  handleHalfRaceTwist() {
+    if (this.halfRaceTwistDone || this.elapsed < this.duration * 0.5) return;
+    this.halfRaceTwistDone = true;
+
+    const snapshot = this.getRanking().filter((racer) => racer.finishedAt === null);
+    if (snapshot.length < 2) return;
+
+    const originalLeader = snapshot[0];
+    const originalSecond = snapshot[1];
+    const originalLast = snapshot[snapshot.length - 1];
+    const doComeback = Math.random() < GAME_CONFIG.halfRaceChance;
+    const doLeaderDrop = Math.random() < GAME_CONFIG.halfRaceChance && !(snapshot.length === 2 && doComeback);
+
+    // 50% co hoi nguoi cuoi duoc gio tro luc va vuot 1-2 hang.
+    if (doComeback && originalLast.id !== originalLeader.id) {
+      const maxRanks = snapshot.length <= 3
+        ? snapshot.length - 1
+        : Math.min(GAME_CONFIG.comebackMaxRanks, snapshot.length - 1);
+      const ranksToGain = Math.max(GAME_CONFIG.comebackMinRanks, Math.floor(rand(1, maxRanks + 1)));
+      let targetIndex = Math.max(0, snapshot.length - 1 - ranksToGain);
+      // Neu ca hai su kien cung xay ra, giu nguoi dan dau chi tut dung mot hang.
+      if (doLeaderDrop && snapshot.length >= 3) targetIndex = Math.max(2, targetIndex);
+      const target = snapshot[targetIndex];
+      const from = Number.isFinite(originalLast.displayProgress) ? originalLast.displayProgress : originalLast.progress;
+      const to = Math.min(0.985, Math.max(originalLast.progress, target.progress + rand(0.006, 0.014)));
+      originalLast.progress = to;
+      originalLast.targetFinishTime = Math.min(originalLast.targetFinishTime, this.duration * rand(0.91, 1.02));
+      originalLast.jumpAnim = {
+        from,
+        to,
+        start: this.elapsed,
+        end: this.elapsed + 1.45,
+        arcHeight: 3
+      };
+      this.addEffect(originalLast, 'comebackWind', 1.13 + originalLast.stats.luck * 0.04, GAME_CONFIG.comebackDuration);
+      this.applyEvent('comebackWind', originalLast, { ignoreCooldown: true, noExtraEffect: true });
+    }
+
+    // Doc lap 50%: nguoi dang dung dau bi mat nhip va tut dung 1 hang.
+    if (doLeaderDrop && originalLeader.finishedAt === null) {
+      const from = Number.isFinite(originalLeader.displayProgress) ? originalLeader.displayProgress : originalLeader.progress;
+      const to = Math.max(0, Math.min(originalLeader.progress, originalSecond.progress - rand(0.006, 0.012)));
+      originalLeader.progress = to;
+      originalLeader.targetFinishTime = Math.max(originalLeader.targetFinishTime, this.duration * rand(1.00, 1.08));
+      originalLeader.jumpAnim = {
+        from,
+        to,
+        start: this.elapsed,
+        end: this.elapsed + 1.15,
+        arcHeight: 0
+      };
+      this.addEffect(originalLeader, 'leaderDrop', 0.82, GAME_CONFIG.leaderDropDuration);
+      this.applyEvent('leaderDrop', originalLeader, { ignoreCooldown: true, noExtraEffect: true });
     }
   }
 
@@ -783,7 +968,8 @@ class RaceEngine {
     if (type === 'stumble') visualType = 'rock';
     if (type === 'block' || type === 'bump') visualType = 'impact';
     if (type === 'jumpSuccess' || type === 'jumpFail') visualType = 'jumpBurst';
-    if (type === 'finalSprint' || type === 'slipstream') visualType = 'speed';
+    if (type === 'finalSprint' || type === 'slipstream' || type === 'comebackWind') visualType = 'speed';
+    if (type === 'leaderDrop') visualType = 'wind';
     if (!visualType) return;
 
     this.visualEvents.push({
@@ -911,6 +1097,8 @@ class GameApp {
     CHARACTER_DATA.forEach((character) => {
       [character.thumb, ...character.frames].forEach((path) => {
         const img = new Image();
+        img.decoding = 'async';
+        img.onerror = () => { img.dataset.loadFailed = '1'; };
         img.src = path;
         this.imageCache.set(path, img);
       });
@@ -929,12 +1117,64 @@ class GameApp {
 
   populateCharacterGallery() {
     this.dom.characterGallery.innerHTML = CHARACTER_DATA.map((character) => `
-      <div class="character-card">
-        <img src="${character.thumb}" alt="${character.label}">
-        <strong>${character.label}</strong>
-        <span>${character.id.toUpperCase()}</span>
+      <div class="character-card" data-character-card="${character.id}">
+        <button type="button" class="character-pick-button" data-character-pick="${character.id}" aria-label="Chọn ${character.label}">
+          <img src="${character.thumb}" alt="${character.label}">
+          <strong>${character.label}</strong>
+          <span>${character.id.toUpperCase()}</span>
+        </button>
+        <div class="quick-player-list" data-player-list="${character.id}" hidden></div>
       </div>
     `).join('');
+
+    qsa('[data-character-pick]').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        this.openQuickPlayerPicker(button.dataset.characterPick);
+      });
+    });
+  }
+
+  closeQuickPlayerPickers() {
+    qsa('[data-player-list]').forEach((list) => { list.hidden = true; });
+    qsa('[data-character-card]').forEach((card) => card.classList.remove('is-open'));
+  }
+
+  openQuickPlayerPicker(characterId) {
+    const names = parseNames(this.dom.playerNames.value);
+    if (!names.length) {
+      this.showComment('Anh nhập tên người chơi trước rồi chọn nhân vật.');
+      return;
+    }
+    this.ensureCharacterSelections(names);
+    const list = qs(`[data-player-list="${characterId}"]`);
+    const card = qs(`[data-character-card="${characterId}"]`);
+    const wasOpen = list && !list.hidden;
+    this.closeQuickPlayerPickers();
+    if (!list || !card || wasOpen) return;
+
+    list.innerHTML = `<div class="quick-player-title">Chọn người nhận nhân vật này</div>` + names.map((name, index) => {
+      const selected = this.playerSelections[index] === characterId;
+      const current = this.playerSelections[index] === 'auto'
+        ? 'Tự động'
+        : this.getCharacterById(this.playerSelections[index]).label;
+      return `<button type="button" class="quick-player-btn ${selected ? 'is-assigned' : ''}" data-quick-player="${index}">
+        <span>${this.escapeHtml(name)}</span><small>${selected ? 'Đang chọn' : current}</small>
+      </button>`;
+    }).join('');
+    list.hidden = false;
+    card.classList.add('is-open');
+
+    Array.from(list.querySelectorAll('[data-quick-player]')).forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const index = Number(button.dataset.quickPlayer);
+        this.playerSelections[index] = characterId;
+        this.closeQuickPlayerPickers();
+        this.syncCharacterRows(names);
+        this.preparePreview();
+      });
+    });
   }
 
   bindEvents() {
@@ -962,6 +1202,9 @@ class GameApp {
       this.preparePreview();
     });
     this.dom.resetBtn.addEventListener('click', () => {
+      const hasNames = parseNames(this.dom.playerNames.value).length > 0;
+      const confirmed = !hasNames || window.confirm('Bạn có chắc muốn xóa toàn bộ tên và lựa chọn nhân vật?');
+      if (!confirmed) return;
       this.dom.playerNames.value = '';
       this.playerSelections = [];
       this.resetRaceState();
@@ -988,6 +1231,10 @@ class GameApp {
       this.playerSelections = names.map(() => 'auto');
       this.syncCharacterRows(names);
       this.preparePreview();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.character-card')) this.closeQuickPlayerPickers();
     });
   }
 
@@ -1049,9 +1296,6 @@ class GameApp {
     this.dom.playerCharacterRows.innerHTML = names.map((name, index) => {
       const current = this.playerSelections[index] || 'auto';
       const preview = previewAssignments[index];
-      const options = ['<option value="auto">Tự động ngẫu nhiên</option>']
-        .concat(CHARACTER_DATA.map((character) => `<option value="${character.id}" ${current === character.id ? 'selected' : ''}>${character.label}</option>`))
-        .join('');
       return `
         <div class="player-char-row" data-row-index="${index}">
           <div class="player-char-thumb"><img src="${preview.thumb}" alt="${preview.label}"></div>
@@ -1059,15 +1303,15 @@ class GameApp {
             <strong>${this.escapeHtml(name)}</strong>
             <span>${current === 'auto' ? `Tự động → ${preview.label}` : `Đang chọn → ${preview.label}`}</span>
           </div>
-          <select data-character-select="${index}">${options}</select>
+          <button type="button" class="soft-btn player-auto-btn" data-player-auto="${index}">Tự động</button>
         </div>
       `;
     }).join('');
 
-    qsa('[data-character-select]').forEach((select) => {
-      select.addEventListener('change', () => {
-        const index = Number(select.dataset.characterSelect);
-        this.playerSelections[index] = select.value;
+    qsa('[data-player-auto]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const index = Number(button.dataset.playerAuto);
+        this.playerSelections[index] = 'auto';
         this.syncCharacterRows(parseNames(this.dom.playerNames.value));
         this.preparePreview();
       });
@@ -1113,6 +1357,10 @@ class GameApp {
     }
 
     this.hideResults();
+    this.closeQuickPlayerPickers();
+    this.customizerOpen = false;
+    this.dom.characterCustomizer.hidden = true;
+    this.dom.toggleCustomizerBtn.textContent = 'Tùy chỉnh nhân vật';
     this.commentQueue = [];
     this.confetti = [];
     const map = this.getSelectedMap();
@@ -1203,23 +1451,26 @@ class GameApp {
       this.showComment('Hết giờ! Hạng được tính theo ai chạm đích hoặc tiến gần vạch đích nhất.');
     }
     this.spawnConfetti();
-    this.showResults(groups.slice(0, 3));
+    this.showResults(groups);
   }
 
   buildResultGroups(results) {
     const groups = [];
     for (const item of results) {
-      const last = groups[groups.length - 1];
-      const canTieFirst = groups.length === 1 && last && last.items.length < GAME_CONFIG.maxTieWinners;
-      const closeFinish = last && item.finishedAt !== null && last.items[0].finishedAt !== null && Math.abs(item.finishedAt - last.items[0].finishedAt) <= 0.16;
-      if (canTieFirst && closeFinish) {
-        last.items.push(item);
+      const firstGroup = groups[0];
+      const canTieFirst = groups.length === 1 && firstGroup && firstGroup.items.length < GAME_CONFIG.maxTieWinners;
+      const closeFinish = canTieFirst
+        && item.finishedAt !== null
+        && firstGroup.items[0].finishedAt !== null
+        && Math.abs(item.finishedAt - firstGroup.items[0].finishedAt) <= 0.16;
+
+      if (closeFinish) {
+        firstGroup.items.push(item);
       } else {
         groups.push({ rank: groups.length + 1, items: [item] });
       }
-      if (groups.length >= 3 && groups[groups.length - 1].items.length >= 1) continue;
     }
-    return groups.slice(0, 3).map((group, index) => ({ ...group, rank: index + 1 }));
+    return groups.map((group, index) => ({ ...group, rank: index + 1 }));
   }
 
   showResults(groups) {
@@ -1233,6 +1484,7 @@ class GameApp {
       return `
         <div class="podium-item">
           <div class="podium-rank">${group.rank}</div>
+          <div class="podium-avatars">${group.items.map((item) => `<img class="podium-avatar" src="${item.character.thumb}" alt="${item.character.label}">`).join('')}</div>
           <div class="podium-name">
             <strong>Hạng ${group.rank}: ${names}</strong>
             <span>${group.items.length > 1 ? 'Đồng hạng đầu' : characterNames}</span>
@@ -1259,6 +1511,7 @@ class GameApp {
       return `
         <li class="rank-item ${changed ? 'rank-jump' : ''}">
           <div class="rank-no">${index + 1}</div>
+          <img class="rank-avatar" src="${racer.character.thumb}" alt="${racer.character.label}">
           <div class="rank-name">
             <strong>${this.escapeHtml(racer.name)}</strong>
             <span>${racer.character.label} · Làn ${racer.lane + 1}</span>
@@ -1274,13 +1527,27 @@ class GameApp {
     const frame = canvas.parentElement;
     const rect = frame.getBoundingClientRect();
     const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
-    const width = Math.max(720, Math.floor(rect.width));
-    const height = Math.max(420, Math.floor(rect.height));
-    canvas.width = Math.floor(width * dpr);
-    canvas.height = Math.floor(height * dpr);
+
+    // Dung he toa do trung voi kich thuoc hien thi thuc.
+    // Gan chieu cao ro rang de canvas khong tu lay intrinsic height va keo dai bat thuong tren iPhone.
+    const width = Math.max(300, Math.round(rect.width || 720));
+    const mobile = width <= 720;
+    const height = mobile
+      ? Math.round(clamp(width * 0.75, 270, 420))
+      : Math.round(clamp(width * 0.5625, 400, 720));
+
+    frame.style.height = `${height}px`;
+    frame.style.minHeight = `${height}px`;
+
+    const pixelWidth = Math.round(width * dpr);
+    const pixelHeight = Math.round(height * dpr);
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+      canvas.width = pixelWidth;
+      canvas.height = pixelHeight;
+    }
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    canvas.dataset.cssWidth = width;
-    canvas.dataset.cssHeight = height;
+    canvas.dataset.cssWidth = String(width);
+    canvas.dataset.cssHeight = String(height);
     this.drawRace();
   }
 
@@ -1296,7 +1563,12 @@ class GameApp {
     }
 
     this.updateConfetti(dt);
-    this.drawRace();
+    try {
+      this.drawRace();
+    } catch (error) {
+      console.error('Loi ve canvas:', error);
+      // Van tiep tuc game; frame sau se dung fallback neu asset loi.
+    }
     this.animationId = requestAnimationFrame((nextTime) => this.loop(nextTime));
   }
 
@@ -1754,14 +2026,15 @@ class GameApp {
   }
 
   drawRacerSprite(ctx, racer, p, now) {
-    const drawBox = clamp(232 - this.engine.racers.length * 4.4, 144, 184);
+    const laneWidth = Math.max(1, this.trackGeometry?.laneWidth || 22);
+
+    // Chieu cao nhan vat xap xi gap doi be rong mot lan dua.
+    // Co min/max nhe de van doc duoc tren mobile va khong che kin duong dua tren desktop.
+    const drawBox = clamp(laneWidth * 2.05, 30, 64);
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
 
-    const rawAngle = Number.isFinite(p.angle) ? p.angle : 0;
-
-    // Giu nhan vat luon dung than: neu chay ve ben trai thi lat ngang,
-    // goc xoay bi gioi han de khong bi chong nguoc tren doan dao chieu.
+    const rawAngle = Number.isFinite(p?.angle) ? p.angle : 0;
     const flipX = Math.cos(rawAngle) < 0 ? -1 : 1;
     const uprightAngle = Math.atan2(Math.sin(rawAngle), Math.abs(Math.cos(rawAngle)));
     const targetAngle = clamp(uprightAngle, -0.42, 0.42);
@@ -1769,62 +2042,52 @@ class GameApp {
     if (!Number.isFinite(racer.renderAngle)) racer.renderAngle = targetAngle;
     racer.renderAngle = lerpAngle(racer.renderAngle, targetAngle, paused ? 0.16 : 0.24);
 
-    const targetLean = clamp((p.turn || 0) * 3.8, -0.20, 0.20);
+    const targetLean = clamp((p?.turn || 0) * 3.2, -0.16, 0.16);
     racer.bodyLean = lerp(racer.bodyLean || 0, targetLean, paused ? 0.10 : 0.18);
 
+    const totalFrames = Math.max(1, racer.character.frames.length || 1);
     const cyclePhase = Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0;
-    const virtualFrame = paused ? 0 : (cyclePhase / 2);
-    const baseFrame = Math.floor(virtualFrame) % 4;
-    const nextFrame = (baseFrame + 1) % 4;
-    const blend = paused ? 0 : (virtualFrame - Math.floor(virtualFrame));
-    const framePathA = racer.character.frames[baseFrame] || racer.character.frames[0];
-    const framePathB = racer.character.frames[nextFrame] || racer.character.frames[0];
-    const imgA = this.imageCache.get(framePathA);
-    const imgB = this.imageCache.get(framePathB);
-    const bob = paused ? 0 : Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 1.8;
-    const stride = paused ? 1 : 1 + Math.sin((cyclePhase / GAME_CONFIG.runCycleFrames) * Math.PI * 2) * 0.035;
+    const frameIndex = paused ? 0 : (Math.floor(cyclePhase) % totalFrames);
+    const framePath = racer.character.frames[frameIndex] || racer.character.frames[0];
+    const img = this.imageCache.get(framePath);
+    const imageReady = Boolean(img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0);
+
+    const wave = Math.sin((cyclePhase / Math.max(1, GAME_CONFIG.runCycleFrames)) * Math.PI * 2);
+    const bob = paused ? 0 : wave * 0.8;
+    const strideX = paused ? 1 : 1 + wave * 0.018;
+    const strideY = paused ? 0.96 : 1 - Math.abs(wave) * 0.012;
+    const lift = Number.isFinite(racer.displayLift) ? racer.displayLift : 0;
 
     ctx.save();
-    ctx.translate(p.x, p.y - (racer.displayLift || 0));
-    ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.045 : 0));
-    ctx.scale(flipX * stride, paused ? 0.96 : (1 - Math.abs(racer.bodyLean) * 0.045));
-    if (paused) ctx.scale(1.04, 0.94);
+    ctx.translate(p.x, p.y - lift);
+    ctx.rotate(racer.renderAngle + racer.bodyLean + (wobble ? Math.sin(this.engine.elapsed * 16 + racer.index) * 0.035 : 0));
+    ctx.scale(flipX * strideX, strideY);
+    if (paused) ctx.scale(1.03, 0.95);
 
-    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
     ctx.beginPath();
-    ctx.ellipse(0, drawBox * 0.35 + (racer.displayLift || 0) * 0.045, drawBox * 0.28, drawBox * 0.09, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, drawBox * 0.34 + lift * 0.04, drawBox * 0.26, drawBox * 0.075, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    const drawX = -drawBox / 2;
-    const drawY = -drawBox / 2 - 6 + bob;
-    if (imgA && imgA.complete) {
-      ctx.save();
-      ctx.globalAlpha = paused ? 1 : (1 - blend);
-      ctx.drawImage(imgA, drawX, drawY, drawBox, drawBox);
-      ctx.restore();
-    }
-    if (!paused && imgB && imgB.complete) {
-      ctx.save();
-      ctx.globalAlpha = blend;
-      ctx.drawImage(imgB, drawX, drawY, drawBox, drawBox);
-      ctx.restore();
-    }
-
-    if ((!imgA || !imgA.complete) && (!imgB || !imgB.complete)) {
-      const size = clamp(62 - this.engine.racers.length * 0.56, 36, 48);
-      this.drawFullDuck(ctx, racer, size, baseFrame, now);
+    if (imageReady) {
+      ctx.drawImage(img, -drawBox / 2, -drawBox / 2 - 2 + bob, drawBox, drawBox);
+    } else {
+      const fallbackSize = clamp(drawBox * 0.31, 10, 20);
+      this.drawFullDuck(ctx, racer, fallbackSize, frameIndex % 4, now);
     }
     ctx.restore();
 
     ctx.save();
-    ctx.font = '800 12px system-ui, sans-serif';
+    const fontSize = clamp(laneWidth * 0.62, 9, 11);
+    ctx.font = `800 ${fontSize}px system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const label = racer.name.length > 8 ? `${racer.name.slice(0, 8)}…` : racer.name;
     const textWidth = ctx.measureText(label).width;
-    const labelY = p.y + drawBox * 0.31 - (racer.displayLift || 0);
-    ctx.fillStyle = 'rgba(18,55,42,0.84)';
-    this.roundRect(ctx, p.x - textWidth / 2 - 6, labelY, textWidth + 12, 18, 8);
+    const labelHeight = fontSize + 7;
+    const labelY = p.y + drawBox * 0.31 - lift;
+    ctx.fillStyle = 'rgba(18,55,42,0.86)';
+    this.roundRect(ctx, p.x - textWidth / 2 - 4, labelY, textWidth + 8, labelHeight, labelHeight / 2);
     ctx.fill();
     ctx.fillStyle = '#ECFFF7';
     ctx.fillText(label, p.x, labelY + 3);
@@ -2046,5 +2309,5 @@ class GameApp {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  new GameApp();
+  window.gameApp = new GameApp();
 });

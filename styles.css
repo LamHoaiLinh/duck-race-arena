@@ -399,7 +399,7 @@ canvas { display: block; width: 100%; height: 100%; }
     grid-template-columns: 56px minmax(0, 1fr);
   }
   .player-char-row select { grid-column: 1 / -1; }
-  .canvas-frame { min-height: 320px; }
+  .canvas-frame { min-height: 0; aspect-ratio: 4 / 3; }
   .podium-item { grid-template-columns: 52px 1fr; }
   .podium-time { grid-column: 2 / 3; text-align: left; }
 }
@@ -408,3 +408,212 @@ canvas { display: block; width: 100%; height: 100%; }
 .result-overlay[hidden] {
   display: none !important;
 }
+
+
+/* Dieu khien nhanh ngay tren khung dua */
+.single-action { grid-template-columns: minmax(180px, 260px); justify-content: end; }
+.canvas-frame { position: relative; }
+.arena-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 12;
+  display: flex;
+  gap: 8px;
+  padding: 7px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(45,212,191,0.24);
+  box-shadow: 0 10px 26px rgba(18,55,42,0.16);
+  backdrop-filter: blur(8px);
+}
+.arena-action-btn { min-height: 40px; padding: 9px 13px; border-radius: 14px; font-size: 0.86rem; }
+
+/* Chon nhanh nhan vat: bam avatar roi chon nguoi choi */
+.character-card { position: relative; padding: 0; overflow: visible; }
+.character-pick-button {
+  width: 100%;
+  min-height: 0;
+  padding: 10px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  box-shadow: none;
+}
+.character-pick-button:hover:not(:disabled) { transform: none; box-shadow: none; background: #ECFFF8; }
+.character-card.is-open { z-index: 20; border-color: rgba(45,212,191,0.65); box-shadow: 0 12px 30px rgba(18,55,42,0.15); }
+.quick-player-list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(230px, 82vw);
+  max-height: 250px;
+  overflow: auto;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(45,212,191,0.25);
+  box-shadow: 0 18px 38px rgba(18,55,42,0.18);
+}
+.quick-player-list[hidden] { display: none !important; }
+.quick-player-title { padding: 4px 7px 7px; font-size: 0.78rem; color: var(--muted); font-weight: 900; }
+.quick-player-btn {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  margin: 3px 0;
+  border-radius: 12px;
+  background: #F3FFF9;
+  border: 1px solid rgba(45,212,191,0.14);
+  box-shadow: none;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.quick-player-btn.is-assigned { background: #D9FFF2; border-color: rgba(45,212,191,0.45); }
+.quick-player-btn small { color: var(--muted); font-weight: 800; }
+.player-char-row { grid-template-columns: 64px minmax(0,1fr) auto; }
+.player-auto-btn { min-height: 38px; padding: 8px 12px; border-radius: 12px; box-shadow: none; }
+
+/* Avatar trong bang xep hang va ket qua */
+.rank-item { grid-template-columns: 42px 48px minmax(0,1fr) auto; }
+.rank-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  object-fit: contain;
+  background: linear-gradient(135deg,#F8FFFC,#DFFFF4);
+  border: 1px solid rgba(45,212,191,0.18);
+}
+.podium-item { grid-template-columns: 62px auto minmax(0,1fr) auto; }
+.podium-avatars { display:flex; align-items:center; min-width:54px; }
+.podium-avatar {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: #ECFFF7;
+  border: 2px solid #fff;
+  box-shadow: 0 5px 14px rgba(18,55,42,0.12);
+}
+.podium-avatar + .podium-avatar { margin-left: -16px; }
+
+@media (max-width: 720px) {
+  .single-action { grid-template-columns: 1fr; }
+  .arena-actions { top: 8px; right: 8px; gap: 5px; padding: 5px; border-radius: 14px; }
+  .arena-action-btn { min-height: 36px; padding: 7px 9px; font-size: 0.75rem; }
+  .rank-item { grid-template-columns: 38px 42px minmax(0,1fr) auto; gap: 8px; padding: 9px; }
+  .rank-avatar { width: 40px; height: 40px; border-radius: 12px; }
+  .podium-item { grid-template-columns: 48px 54px 1fr; }
+  .podium-time { grid-column: 3 / 4; }
+  .quick-player-list { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); max-height: 62vh; }
+}
+<<<<<<< HEAD
+
+
+/* ===== Ban cap nhat: bang live nam trong khung dua ===== */
+.main-grid {
+  display: block;
+}
+.arena-panel {
+  width: 100%;
+}
+.live-rank-panel {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(248,255,252,0.98), rgba(236,255,247,0.94));
+  border: 1px solid rgba(45,212,191,0.18);
+}
+.live-rank-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.live-rank-head h2 {
+  margin: 0 0 2px;
+  font-size: 1.12rem;
+}
+.live-rank-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.live-rank-panel .ranking-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+.live-rank-panel .rank-item {
+  grid-template-columns: 32px 38px minmax(0,1fr) auto;
+  gap: 8px;
+  min-height: 58px;
+  padding: 8px 10px;
+  border-radius: 15px;
+}
+.live-rank-panel .rank-no {
+  width: 30px;
+  height: 30px;
+  font-size: 0.85rem;
+}
+.live-rank-panel .rank-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+}
+.live-rank-panel .rank-name strong {
+  font-size: 0.9rem;
+}
+.live-rank-panel .rank-name span {
+  font-size: 0.72rem;
+}
+.live-rank-panel .rank-progress {
+  font-size: 0.86rem;
+}
+
+/* Ket qua hien thi tat ca thu hang, co cuon neu dong nguoi */
+.result-card {
+  max-height: min(92vh, 900px);
+  display: flex;
+  flex-direction: column;
+}
+.result-card .podium {
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+.result-card .big-action {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 720px) {
+  .live-rank-panel {
+    padding: 10px;
+    border-radius: 16px;
+  }
+  .live-rank-panel .ranking-list {
+    grid-template-columns: 1fr;
+  }
+  .live-rank-head p {
+    font-size: 0.76rem;
+  }
+  .result-card {
+    width: calc(100vw - 16px);
+    max-height: 94dvh;
+    padding: 18px;
+    border-radius: 24px;
+  }
+  .result-card h2 {
+    font-size: 1.8rem;
+    padding-right: 50px;
+  }
+}
+=======
+>>>>>>> e284845503634616a1f1a983d82e9df53aea45a3

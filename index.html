@@ -40,10 +40,7 @@ Huy</textarea>
           <input id="durationNumber" type="number" min="15" max="90" value="30" />
         </div>
         <input id="raceDuration" type="range" min="15" max="90" step="1" value="30" />
-        <div class="action-grid">
-          <button type="button" id="startBtn" class="primary-btn">Bắt đầu</button>
-          <button type="button" id="replayBtn" class="gold-btn" disabled>Chơi lại</button>
-          <button type="button" id="randomMapBtn" class="soft-btn">Random map</button>
+        <div class="action-grid single-action">
           <button type="button" id="resetBtn" class="rose-btn">Reset tên</button>
         </div>
       </div>
@@ -86,25 +83,35 @@ Huy</textarea>
         </div>
         <div class="canvas-frame">
           <canvas id="raceCanvas" width="1280" height="720" aria-label="Đường đua"></canvas>
+          <div class="arena-actions" aria-label="Điều khiển cuộc đua">
+            <button type="button" id="startBtn" class="primary-btn arena-action-btn">Bắt đầu</button>
+            <button type="button" id="replayBtn" class="gold-btn arena-action-btn" disabled>Chơi lại</button>
+            <button type="button" id="randomMapBtn" class="soft-btn arena-action-btn">Đổi map</button>
+          </div>
         </div>
         <div class="ticker" id="commentaryTicker">
           <span>Nhập tên người chơi, tùy chỉnh nhân vật nếu muốn rồi bấm Bắt đầu.</span>
         </div>
-      </section>
-
-      <aside class="rank-panel card">
-        <div class="panel-head rank-head">
-          <div>
-            <h2>Bảng xếp hạng</h2>
-            <p>Realtime, đổi hạng sẽ nhảy nhẹ.</p>
+        <section class="live-rank-panel" aria-label="Bảng xếp hạng trực tiếp">
+          <div class="live-rank-head">
+            <div>
+              <h2>Bảng live</h2>
+              <p>Xếp hạng trực tiếp ngay trong khung đường đua.</p>
+            </div>
           </div>
+<<<<<<< HEAD
+          <ol id="rankingList" class="ranking-list"></ol>
+        </section>
+      </section>
+=======
         </div>
         <ol id="rankingList" class="ranking-list"></ol>
         <div class="logic-note">
           <strong>Luật đua</strong>
-          <p>Sự kiện diễn ra chậm khoảng vài giây một lần để dễ đọc. Người chạm vạch đích mới được tính là người về trước.</p>
+          <p>Sự kiện diễn ra chậm để dễ đọc. Qua nửa thời gian có thể xuất hiện gió trợ lực cho người cuối hoặc áp lực làm người dẫn đầu tụt một hạng.</p>
         </div>
       </aside>
+>>>>>>> e284845503634616a1f1a983d82e9df53aea45a3
     </section>
   </main>
 
@@ -112,7 +119,7 @@ Huy</textarea>
     <section class="result-card">
       <button type="button" id="closeResultBtn" class="close-btn" aria-label="Đóng">×</button>
       <span class="eyebrow">Kết quả cuộc đua</span>
-      <h2>Kết quả chung cuộc</h2>
+      <h2>Tất cả thứ hạng</h2>
       <div id="podium" class="podium"></div>
       <button type="button" id="playAgainBigBtn" class="primary-btn big-action">Chơi lượt mới</button>
     </section>
