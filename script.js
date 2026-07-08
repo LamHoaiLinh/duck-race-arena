@@ -46,7 +46,9 @@ const GAME_CONFIG = {
   rankShuffleNearFinishChance: 0.60,
   rankShuffleNearFinishThreshold: 0.76,
   rankShuffleVisualDuration: 1.15,
-  rankShuffleBoostDuration: 2.2
+  rankShuffleBoostDuration: 2.2,
+  countdownStepMs: 720,
+  countdownGoHoldMs: 520
 };
 
 const SAMPLE_NAMES = {
@@ -622,6 +624,7 @@ class RaceEngine {
     this.lastRankShuffleRacerId = null;
     this.lastObservedLapIndex = 0;
     this.rankShuffleSerial = 0;
+    this.finishSerial = 0;
     this.racers = this.createRacers(names, characters);
     this.assignFairFinishTimes();
     this.assignFairJumpPads();
@@ -642,8 +645,10 @@ class RaceEngine {
         courage: rand(0.38, 1.00)
       },
       progress: 0,
+      previousProgress: 0,
       targetFinishTime: this.duration,
       finishedAt: null,
+      finishOrder: null,
       eventCooldownUntil: 0,
       eventCount: 0,
       hardPauseUntil: 0,
@@ -716,10 +721,22 @@ class RaceEngine {
 
   getRanking() {
     return this.racers.slice().sort((a, b) => {
-      if (a.finishedAt !== null && b.finishedAt !== null) return a.finishedAt - b.finishedAt;
-      if (a.finishedAt !== null) return -1;
-      if (b.finishedAt !== null) return 1;
-      return b.progress - a.progress;
+      const aFinished = a.finishedAt !== null;
+      const bFinished = b.finishedAt !== null;
+
+      if (aFinished && bFinished) {
+        const orderA = Number.isFinite(a.finishOrder) ? a.finishOrder : Number.MAX_SAFE_INTEGER;
+        const orderB = Number.isFinite(b.finishOrder) ? b.finishOrder : Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) return orderA - orderB;
+        if (a.finishedAt !== b.finishedAt) return a.finishedAt - b.finishedAt;
+        return a.index - b.index;
+      }
+      if (aFinished) return -1;
+      if (bFinished) return 1;
+
+      const progressDiff = b.progress - a.progress;
+      if (Math.abs(progressDiff) > 1e-7) return progressDiff;
+      return a.index - b.index;
     });
   }
 
@@ -732,7 +749,7 @@ class RaceEngine {
     this.handleDynamicRankShuffle();
     this.checkJumpPadCollisions();
     this.handleScheduledEvent();
-    this.checkFinish();
+    this.checkFinish(dt);
     this.updateVisualState(dt);
   }
 
@@ -768,6 +785,7 @@ class RaceEngine {
 
     for (const racer of this.racers) {
       if (racer.finishedAt !== null) continue;
+      racer.previousProgress = racer.progress;
       racer.effects = racer.effects.filter((effect) => effect.until > this.elapsed);
       if (racer.hardPauseUntil > this.elapsed) continue;
 
@@ -1189,14 +1207,39 @@ class RaceEngine {
     });
   }
 
-  checkFinish() {
-    const newlyFinished = [];
+  checkFinish(dt = 0) {
+    const frameDt = Math.max(0, Number.isFinite(dt) ? dt : 0);
+    const frameStart = Math.max(0, this.elapsed - frameDt);
+    const crossingCandidates = [];
+
     for (const racer of this.racers) {
-      if (racer.finishedAt === null && racer.progress >= this.totalLaps) {
-        racer.progress = this.totalLaps;
-        racer.finishedAt = this.elapsed;
-        newlyFinished.push(racer);
-      }
+      if (racer.finishedAt !== null || racer.progress < this.totalLaps) continue;
+
+      const previous = Number.isFinite(racer.previousProgress) ? racer.previousProgress : racer.progress;
+      const travelled = racer.progress - previous;
+      const fraction = travelled > 1e-8
+        ? clamp((this.totalLaps - previous) / travelled, 0, 1)
+        : 1;
+      const crossedAt = frameStart + frameDt * fraction;
+      crossingCandidates.push({ racer, crossedAt });
+    }
+
+    crossingCandidates.sort((a, b) => {
+      if (Math.abs(a.crossedAt - b.crossedAt) > 1e-7) return a.crossedAt - b.crossedAt;
+      return a.racer.index - b.racer.index;
+    });
+
+    const newlyFinished = [];
+    for (const entry of crossingCandidates) {
+      const racer = entry.racer;
+      racer.progress = this.totalLaps;
+      racer.previousProgress = this.totalLaps;
+      racer.displayProgress = this.totalLaps;
+      racer.displayLift = 0;
+      racer.jumpAnim = null;
+      racer.finishedAt = entry.crossedAt;
+      racer.finishOrder = ++this.finishSerial;
+      newlyFinished.push(racer);
     }
 
     const hasWinner = newlyFinished.length > 0;
@@ -1215,10 +1258,18 @@ class RaceEngine {
     }
 
     if (timeExpired) {
+      // Du phong hiem: neu su co lam khong ai kip cham vach, nguoi gan vach nhat duoc dua
+      // dung vao vach va ghi nhan la nguoi ve truoc. Dong bo ca vi tri logic va vi tri hien thi.
       const ranking = this.getRanking();
       if (ranking[0] && ranking[0].finishedAt === null) {
-        ranking[0].progress = this.totalLaps;
-        ranking[0].finishedAt = this.elapsed;
+        const forcedWinner = ranking[0];
+        forcedWinner.progress = this.totalLaps;
+        forcedWinner.previousProgress = this.totalLaps;
+        forcedWinner.displayProgress = this.totalLaps;
+        forcedWinner.displayLift = 0;
+        forcedWinner.jumpAnim = null;
+        forcedWinner.finishedAt = this.elapsed;
+        forcedWinner.finishOrder = ++this.finishSerial;
       }
       this.finished = true;
       this.running = false;
@@ -1234,7 +1285,8 @@ class RaceEngine {
       progress: racer.progress,
       totalLaps: this.totalLaps,
       lapDuration: this.lapDuration,
-      finishedAt: racer.finishedAt
+      finishedAt: racer.finishedAt,
+      finishOrder: racer.finishOrder
     }));
   }
 }
@@ -1270,7 +1322,11 @@ class GameApp {
       applyAllCharactersBtn: qs('#applyAllCharactersBtn'),
       setAllAutoBtn: qs('#setAllAutoBtn'),
       playerCharacterRows: qs('#playerCharacterRows'),
-      characterGallery: qs('#characterGallery')
+      characterGallery: qs('#characterGallery'),
+      startCountdown: qs('#startCountdown'),
+      countdownNumber: qs('#countdownNumber'),
+      countdownLabel: qs('#countdownLabel'),
+      refereeScene: qs('#refereeScene')
     };
 
     this.ctx = this.dom.canvas.getContext('2d');
@@ -1286,6 +1342,9 @@ class GameApp {
     this.playerSelections = [];
     this.imageCache = new Map();
     this.customizerOpen = false;
+    this.countdownActive = false;
+    this.countdownToken = 0;
+    this.audioContext = null;
 
     this.init();
   }
@@ -1422,7 +1481,7 @@ class GameApp {
     this.dom.playAgainBigBtn.addEventListener('click', () => { this.hideResults(); this.startRace(); });
     this.dom.closeResultBtn.addEventListener('click', () => this.hideResults());
     this.dom.randomMapBtn.addEventListener('click', () => {
-      const wasRunning = Boolean(this.engine?.running);
+      const wasRunning = Boolean(this.engine?.running || this.countdownActive);
       this.cancelActiveRace();
       const current = this.dom.mapSelect.value;
       const options = MAP_DATA.filter((map) => map.id !== current);
@@ -1471,6 +1530,7 @@ class GameApp {
   }
 
   cancelActiveRace() {
+    this.cancelStartCountdown();
     if (this.engine) {
       this.engine.stop();
       this.engine.finished = true;
@@ -1490,7 +1550,7 @@ class GameApp {
   }
 
   restartAfterMapChange() {
-    const wasRunning = Boolean(this.engine?.running);
+    const wasRunning = Boolean(this.engine?.running || this.countdownActive);
     this.cancelActiveRace();
     if (wasRunning && parseNames(this.dom.playerNames.value).length >= GAME_CONFIG.minPlayers) {
       this.startRace();
@@ -1500,6 +1560,12 @@ class GameApp {
   }
 
   endRaceManually() {
+    if (this.countdownActive) {
+      this.cancelActiveRace();
+      this.preparePreview();
+      this.showComment('Đã hủy lượt đua trước khi xuất phát.');
+      return;
+    }
     if (!this.engine?.running) return;
     this.engine.stop();
     this.engine.finished = true;
@@ -1636,7 +1702,9 @@ class GameApp {
     }
   }
 
-  startRace() {
+  async startRace() {
+    if (this.countdownActive) return;
+
     const names = parseNames(this.dom.playerNames.value);
     if (names.length < GAME_CONFIG.minPlayers) {
       this.showComment(`Cần tối thiểu ${GAME_CONFIG.minPlayers} người chơi.`);
@@ -1647,6 +1715,7 @@ class GameApp {
       return;
     }
 
+    this.cancelStartCountdown();
     this.hideResults();
     this.closeQuickPlayerPickers();
     this.customizerOpen = false;
@@ -1658,7 +1727,7 @@ class GameApp {
     const duration = this.getDuration();
     const characters = this.resolveAssignments(names);
 
-    this.engine = new RaceEngine({
+    const raceEngine = new RaceEngine({
       names,
       duration,
       laps: this.getLapCount(),
@@ -1667,19 +1736,124 @@ class GameApp {
       onEvent: (event) => this.handleEngineEvent(event),
       onFinish: (results) => this.finishRace(results)
     });
-    this.engine.start();
-    this.lastFrameTime = performance.now();
+    this.engine = raceEngine;
     this.rankingSignature = '';
     this.dom.startBtn.disabled = true;
     this.dom.replayBtn.disabled = true;
     this.dom.endRaceBtn.disabled = false;
     const laps = this.getLapCount();
     this.dom.timerText.textContent = `Vòng 1/${laps} · ${duration.toFixed(1)}s`;
-    this.showComment(`Cuộc đua ${laps} vòng bắt đầu! Người hoàn thành đủ vòng và chạm đích trước sẽ xếp hạng cao hơn.`);
+    this.showComment('Các tay đua vào vị trí. Chuẩn bị xuất phát!');
     this.renderRanking(true);
+    this.drawRace();
+
+    // Khoi tao AudioContext ngay trong thao tac bam de trinh duyet cho phep phat tieng sung sau dem nguoc.
+    this.prepareStartAudio();
+    const canStart = await this.runStartCountdown();
+    if (!canStart || this.engine !== raceEngine) return;
+
+    raceEngine.start();
+    this.lastFrameTime = performance.now();
+    this.showComment(`XUẤT PHÁT! Cuộc đua ${laps} vòng chính thức bắt đầu.`);
+  }
+
+  cancelStartCountdown() {
+    this.countdownToken += 1;
+    this.countdownActive = false;
+    if (this.dom.startCountdown) {
+      this.dom.startCountdown.hidden = true;
+      this.dom.startCountdown.classList.remove('is-visible', 'is-fire');
+    }
+    if (this.dom.refereeScene) this.dom.refereeScene.classList.remove('is-fire');
+  }
+
+  async runStartCountdown() {
+    const overlay = this.dom.startCountdown;
+    if (!overlay) return true;
+
+    const token = ++this.countdownToken;
+    this.countdownActive = true;
+    overlay.hidden = false;
+    overlay.classList.add('is-visible');
+    overlay.classList.remove('is-fire');
+    if (this.dom.refereeScene) this.dom.refereeScene.classList.remove('is-fire');
+
+    const steps = ['3', '2', '1'];
+    for (const value of steps) {
+      if (token !== this.countdownToken) return false;
+      this.dom.countdownNumber.textContent = value;
+      this.dom.countdownLabel.textContent = 'Chuẩn bị';
+      this.dom.countdownNumber.classList.remove('is-ticking');
+      void this.dom.countdownNumber.offsetWidth;
+      this.dom.countdownNumber.classList.add('is-ticking');
+      overlay.dataset.step = value;
+      await new Promise((resolve) => setTimeout(resolve, GAME_CONFIG.countdownStepMs));
+    }
+
+    if (token !== this.countdownToken) return false;
+    this.dom.countdownNumber.textContent = 'XUẤT PHÁT!';
+    this.dom.countdownLabel.textContent = 'Trọng tài đã nổ súng';
+    this.dom.countdownNumber.classList.remove('is-ticking');
+    void this.dom.countdownNumber.offsetWidth;
+    this.dom.countdownNumber.classList.add('is-ticking');
+    overlay.dataset.step = 'go';
+    overlay.classList.add('is-fire');
+    if (this.dom.refereeScene) this.dom.refereeScene.classList.add('is-fire');
+    this.playStartShot();
+
+    // Cho phep engine bat dau ngay khi sung no; overlay tu bien mat sau mot nhịp ngan.
+    this.countdownActive = false;
+    setTimeout(() => {
+      if (token !== this.countdownToken) return;
+      overlay.classList.remove('is-visible', 'is-fire');
+      if (this.dom.refereeScene) this.dom.refereeScene.classList.remove('is-fire');
+      overlay.hidden = true;
+    }, GAME_CONFIG.countdownGoHoldMs);
+    return true;
+  }
+
+  prepareStartAudio() {
+    try {
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) return;
+      if (!this.audioContext) this.audioContext = new AudioCtor();
+      if (this.audioContext.state === 'suspended') this.audioContext.resume().catch(() => {});
+    } catch (error) {
+      console.warn('Khong khoi tao duoc am thanh xuat phat:', error);
+    }
+  }
+
+  playStartShot() {
+    try {
+      const audio = this.audioContext;
+      if (!audio) return;
+      const now = audio.currentTime;
+      const duration = 0.18;
+      const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * duration), audio.sampleRate);
+      const channel = buffer.getChannelData(0);
+      for (let i = 0; i < channel.length; i += 1) {
+        const decay = Math.pow(1 - i / channel.length, 3.2);
+        channel[i] = (Math.random() * 2 - 1) * decay;
+      }
+      const source = audio.createBufferSource();
+      const filter = audio.createBiquadFilter();
+      const gain = audio.createGain();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(650, now);
+      gain.gain.setValueAtTime(0.34, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+      source.buffer = buffer;
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(audio.destination);
+      source.start(now);
+    } catch (error) {
+      console.warn('Khong phat duoc tieng sung xuat phat:', error);
+    }
   }
 
   resetRaceState() {
+    this.cancelStartCountdown();
     if (this.engine) this.engine.stop();
     this.engine = null;
     this.confetti = [];
@@ -1735,6 +1909,7 @@ class GameApp {
   }
 
   finishRace(results) {
+    this.cancelStartCountdown();
     this.dom.startBtn.disabled = false;
     this.dom.replayBtn.disabled = false;
     this.dom.endRaceBtn.disabled = true;
@@ -1813,7 +1988,8 @@ class GameApp {
     this.dom.rankingList.innerHTML = visibleEntries.map(({ racer, actualRank, isLast }) => {
       const totalLaps = this.engine.totalLaps || 1;
       const lapNo = Math.min(totalLaps, Math.floor(Math.min(racer.progress, totalLaps - 0.0001)) + 1);
-      const lapPercent = Math.round((((racer.progress % 1) + 1) % 1) * 100);
+      const rawLapPercent = Math.round((((racer.progress % 1) + 1) % 1) * 100);
+      const lapPercent = racer.finishedAt === null ? Math.min(99, rawLapPercent) : 100;
       const finishText = racer.finishedAt !== null ? `${round1(racer.finishedAt)}s` : `V${lapNo}/${totalLaps} · ${lapPercent}%`;
       return `
         <li class="rank-item ${changed ? 'rank-jump' : ''} ${isLast ? 'rank-last' : ''}">
@@ -2763,7 +2939,7 @@ class GameApp {
 function bootMintDuckRaceArena() {
   if (window.gameApp) return;
   try {
-    window.__MINT_DUCK_BUILD__ = '2026-07-08-rank-shuffle-multilap-02';
+    window.__MINT_DUCK_BUILD__ = '2026-07-08-finish-order-countdown-01';
     window.gameApp = new GameApp();
   } catch (error) {
     console.error('Mint Duck Race Arena khoi dong that bai:', error);

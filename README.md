@@ -121,3 +121,7 @@ This package includes `.nojekyll` so GitHub Pages serves static assets directly 
 - Co che hoat dong o moi vong; khi sang vong moi game hen dao hang som de tranh giu nguyen thu hang qua lau.
 - Khi gan vach dich, moi moc dao hang co 60% kha nang xay ra va uu tien nhom dan dau de tao bat ngo.
 - Chuyen dong vuot hang duoc noi suy tien ve phia truoc, khong keo nhan vat lui va khong teleport dot ngot.
+
+- Da sua xep hang dich theo thu tu cham vach thuc te (finishOrder), khong con truong hop nhan vat ve truoc nhung bi bao hang 3.
+- Da them man dem nguoc 3-2-1-XUAT PHAT, trong tai no sung va am thanh xuat phat tong hop bang Web Audio.
+- Nguoi chua cham dich khong con hien 100%; chi khi cham vach moi duoc ghi nhan hoan thanh.
