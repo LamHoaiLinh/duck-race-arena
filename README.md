@@ -116,3 +116,8 @@ This package includes `.nojekyll` so GitHub Pages serves static assets directly 
 - HUD mobile duoc thu gon: nut nho, 4 o Top 3 + hang chot nam cung mot hang va co cuon ngang neu man hinh qua hep.
 - Da them che do chon 1, 2, 3 hoac 5 vong. Thoi gian hien tai duoc tinh theo moi vong; vi du 3 vong x 15 giay/vong = 45 giay tong.
 - Engine ho tro tien do nhieu vong, tinh hang theo tong so vong da hoan thanh va chi ve dich khi du so vong.
+
+- Da them co che dao thu hang dinh ky: cu 4-6 giay se co mot tay dua tang toc vuot 1-2 hang.
+- Co che hoat dong o moi vong; khi sang vong moi game hen dao hang som de tranh giu nguyen thu hang qua lau.
+- Khi gan vach dich, moi moc dao hang co 60% kha nang xay ra va uu tien nhom dan dau de tao bat ngo.
+- Chuyen dong vuot hang duoc noi suy tien ve phia truoc, khong keo nhan vat lui va khong teleport dot ngot.

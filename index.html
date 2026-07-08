@@ -171,7 +171,15 @@ const GAME_CONFIG = {
   comebackMinRanks: 1,
   comebackMaxRanks: 2,
   comebackDuration: 2.8,
-  leaderDropDuration: 2.4
+  leaderDropDuration: 2.4,
+  rankShuffleMinGap: 4.0,
+  rankShuffleMaxGap: 6.0,
+  rankShuffleMinPlaces: 1,
+  rankShuffleMaxPlaces: 2,
+  rankShuffleNearFinishChance: 0.60,
+  rankShuffleNearFinishThreshold: 0.76,
+  rankShuffleVisualDuration: 1.15,
+  rankShuffleBoostDuration: 2.2
 };
 
 const SAMPLE_NAMES = {
@@ -446,7 +454,8 @@ const EVENT_COMMENTS = {
   slipstream: '{name} đang đu bám người phía trước để lấy đà!',
   finalSprint: '{name} đang bứt tốc ở những giây cuối!',
   comebackWind: '{name} được luồng gió may mắn nâng lên mạnh mẽ và vượt hạng!',
-  leaderDrop: '{name} gặp áp lực khi dẫn đầu và tụt xuống một hạng!'
+  leaderDrop: '{name} gặp áp lực khi dẫn đầu và tụt xuống một hạng!',
+  rankSurge: '{name} tăng tốc bất ngờ và đổi thứ hạng!'
 };
 
 const EVENT_BUBBLES = {
@@ -461,7 +470,8 @@ const EVENT_BUBBLES = {
   slipstream: 'Đu bám!',
   finalSprint: 'Bứt tốc!',
   comebackWind: 'Gió trợ lực!',
-  leaderDrop: 'Mất nhịp!'
+  leaderDrop: 'Mất nhịp!',
+  rankSurge: 'Vượt hạng!'
 };
 
 const qs = (selector) => document.querySelector(selector);
@@ -741,6 +751,10 @@ class RaceEngine {
     this.tieMode = false;
     this.tieIds = [];
     this.halfRaceTwistDone = false;
+    this.nextRankShuffleAt = rand(GAME_CONFIG.rankShuffleMinGap, GAME_CONFIG.rankShuffleMaxGap);
+    this.lastRankShuffleRacerId = null;
+    this.lastObservedLapIndex = 0;
+    this.rankShuffleSerial = 0;
     this.racers = this.createRacers(names, characters);
     this.assignFairFinishTimes();
     this.assignFairJumpPads();
@@ -778,7 +792,10 @@ class RaceEngine {
       runCyclePhase: rand(0, GAME_CONFIG.runCycleFrames - 0.001),
       displayProgress: 0,
       displayLift: 0,
-      jumpAnim: null
+      jumpAnim: null,
+      rankShiftLap: -1,
+      rankShiftCount: 0,
+      rankShiftCooldownUntil: 0
     }));
   }
 
@@ -845,6 +862,7 @@ class RaceEngine {
     this.visualEvents = this.visualEvents.filter((event) => event.until > this.elapsed);
     this.updateRacers(dt);
     this.handleHalfRaceTwist();
+    this.handleDynamicRankShuffle();
     this.checkJumpPadCollisions();
     this.handleScheduledEvent();
     this.checkFinish();
@@ -855,7 +873,7 @@ class RaceEngine {
     for (const racer of this.racers) {
       if (!Number.isFinite(racer.displayProgress)) racer.displayProgress = racer.progress;
       const paused = racer.hardPauseUntil > this.elapsed;
-      const sprinting = racer.effects.some((effect) => ['finalSprint', 'tailwind', 'jumpSuccess', 'slipstream', 'comebackWind'].includes(effect.type) && effect.until > this.elapsed);
+      const sprinting = racer.effects.some((effect) => ['finalSprint', 'tailwind', 'jumpSuccess', 'slipstream', 'comebackWind', 'rankSurge'].includes(effect.type) && effect.until > this.elapsed);
       const fps = paused ? 0 : (sprinting ? 10 : 7.2);
       racer.runCyclePhase = ((Number.isFinite(racer.runCyclePhase) ? racer.runCyclePhase : 0) + dt * fps) % GAME_CONFIG.runCycleFrames;
 
@@ -909,6 +927,103 @@ class RaceEngine {
         racer.progress = Math.min(this.totalLaps, racer.progress + dt * 0.72);
       }
     }
+  }
+
+  handleDynamicRankShuffle() {
+    const active = this.getRanking().filter((racer) => racer.finishedAt === null);
+    if (active.length < 2) return;
+
+    const leader = active[0];
+    const safeLeaderProgress = Math.min(leader.progress, this.totalLaps - 0.0001);
+    const leaderLapIndex = Math.floor(Math.max(0, safeLeaderProgress));
+
+    // Moi khi sang vong moi, hen mot lan dao hang som hon de vong nao cung co bien dong.
+    if (leaderLapIndex !== this.lastObservedLapIndex) {
+      this.lastObservedLapIndex = leaderLapIndex;
+      this.nextRankShuffleAt = Math.min(this.nextRankShuffleAt, this.elapsed + rand(2.4, 3.8));
+    }
+
+    if (this.elapsed < this.nextRankShuffleAt) return;
+    this.nextRankShuffleAt = this.elapsed + rand(GAME_CONFIG.rankShuffleMinGap, GAME_CONFIG.rankShuffleMaxGap);
+
+    const lapProgress = safeLeaderProgress - leaderLapIndex;
+    const nearLapFinish = lapProgress >= GAME_CONFIG.rankShuffleNearFinishThreshold;
+    const nearRaceFinish = this.elapsed >= this.duration * 0.82 || (this.totalLaps - leader.progress) <= 0.24;
+    const nearFinish = nearLapFinish || nearRaceFinish;
+
+    // O gan vach dich, 60% lan hen se co dao hang de tao bat ngo.
+    if (nearFinish && Math.random() >= GAME_CONFIG.rankShuffleNearFinishChance) return;
+
+    // Chi chon nguoi dang o sau de tang toc vuot len; nhu vay hinh anh luon chay tien,
+    // khong bi keo lui tren duong dua. Nguoi bi vuot se tu dong tut 1-2 hang.
+    const candidates = [];
+    for (let index = 1; index < active.length; index += 1) {
+      const racer = active[index];
+      if (racer.rankShiftCooldownUntil > this.elapsed) continue;
+
+      const racerLap = Math.floor(Math.max(0, Math.min(racer.progress, this.totalLaps - 0.0001)));
+      if (racer.rankShiftLap !== racerLap) {
+        racer.rankShiftLap = racerLap;
+        racer.rankShiftCount = 0;
+      }
+
+      const maxPlaces = Math.min(GAME_CONFIG.rankShuffleMaxPlaces, index);
+      for (let places = GAME_CONFIG.rankShuffleMinPlaces; places <= maxPlaces; places += 1) {
+        const targetIndex = index - places;
+        const target = active[targetIndex];
+        const gap = Math.max(0, target.progress - racer.progress);
+        // Khong teleport qua khoang cach qua lon. Dua thuong duoc can bang nen gap nay thuong nho.
+        if (gap > 0.18) continue;
+
+        let weight = 1;
+        weight *= racer.id === this.lastRankShuffleRacerId ? 0.28 : 1;
+        weight *= 1 / (1 + racer.rankShiftCount * 0.85);
+        if (places === 2) weight *= nearFinish ? 1.40 : 0.72;
+        if (nearFinish && targetIndex <= 2) weight *= 1.55;
+        if (index === active.length - 1) weight *= 1.12;
+        candidates.push({ racer, target, index, targetIndex, places, gap, weight });
+      }
+    }
+
+    if (!candidates.length) return;
+    const choice = weightedPick(candidates.map((item) => ({ value: item, weight: item.weight })));
+    if (!choice) return;
+
+    const { racer, target, places } = choice;
+    const from = Number.isFinite(racer.displayProgress) ? racer.displayProgress : racer.progress;
+    const epsilon = rand(0.006, 0.012);
+    const to = Math.min(this.totalLaps - 0.003, Math.max(racer.progress + 0.004, target.progress + epsilon));
+    if (to <= racer.progress) return;
+
+    racer.progress = to;
+    racer.displayProgress = Math.min(racer.displayProgress, to);
+    racer.jumpAnim = {
+      from,
+      to,
+      start: this.elapsed,
+      end: this.elapsed + GAME_CONFIG.rankShuffleVisualDuration,
+      arcHeight: 0
+    };
+    racer.rankShiftCount += 1;
+    racer.rankShiftCooldownUntil = this.elapsed + GAME_CONFIG.rankShuffleMinGap * 0.85;
+    this.lastRankShuffleRacerId = racer.id;
+    this.rankShuffleSerial += 1;
+
+    // Dieu chinh pacing nhe de thu hang moi ton tai du lau, khong bi keo ve ngay lap tuc.
+    racer.targetFinishTime = Math.max(this.elapsed + 1.0, racer.targetFinishTime - this.duration * (0.010 + places * 0.006));
+    this.addEffect(racer, 'rankSurge', 1.07 + places * 0.025 + racer.stats.burst * 0.018, GAME_CONFIG.rankShuffleBoostDuration);
+    racer.bubble = {
+      text: `+${places} hạng!`,
+      type: 'rankSurge',
+      until: this.elapsed + Math.max(GAME_CONFIG.bubbleMinTime, 2.0)
+    };
+    this.createVisualEvent('rankSurge', racer);
+    racer.eventHistory.push({ type: 'rankSurge', at: this.elapsed, places });
+    this.onEvent?.({
+      type: 'rankSurge',
+      racer,
+      comment: `${racer.name} tăng tốc bất ngờ và vươn lên ${places} hạng!`
+    });
   }
 
   handleHalfRaceTwist() {
@@ -1191,7 +1306,7 @@ class RaceEngine {
     if (type === 'stumble') visualType = 'rock';
     if (type === 'block' || type === 'bump') visualType = 'impact';
     if (type === 'jumpSuccess' || type === 'jumpFail') visualType = 'jumpBurst';
-    if (type === 'finalSprint' || type === 'slipstream' || type === 'comebackWind') visualType = 'speed';
+    if (type === 'finalSprint' || type === 'slipstream' || type === 'comebackWind' || type === 'rankSurge') visualType = 'speed';
     if (type === 'leaderDrop') visualType = 'wind';
     if (!visualType) return;
 
@@ -2781,7 +2896,7 @@ class GameApp {
 function bootMintDuckRaceArena() {
   if (window.gameApp) return;
   try {
-    window.__MINT_DUCK_BUILD__ = '2026-07-08-compact-hud-multilap-01';
+    window.__MINT_DUCK_BUILD__ = '2026-07-08-rank-shuffle-multilap-02';
     window.gameApp = new GameApp();
   } catch (error) {
     console.error('Mint Duck Race Arena khoi dong that bai:', error);
