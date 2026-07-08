@@ -105,3 +105,9 @@ This package includes `.nojekyll` so GitHub Pages serves static assets directly 
 - Them 6 map kho: Skybridge Knot, Subway Serpent, Infinity Stack, Metro Interchange, Spiral Flyover va Dragonfly Cross.
 - Cac map moi cho phep centerline tu cat nhau, co cau vuot va ham chui ve truc tiep tren Canvas de tao cam giac nhieu tang.
 - Nhan vat tren duong dua duoc tang kich thuoc len xap xi 3 lan be rong cua mot lane.
+
+- Da bo khung binh luan live ben duoi duong dua.
+- Da dua bang xep hang live vao phan tren cua canvas, chi hien Top 1-3 va nguoi dang xep chot.
+- Da them nut Ket thuc de dung cuoc dua va hien ket qua tam thoi.
+- Khi doi map trong luc dang dua, game se dung cuoc dua cu va khoi dong mot luot moi tren map moi.
+- Khi thay doi danh sach nguoi choi hoac thoi gian, cuoc dua dang chay se dung va quay ve trang thai san sang.

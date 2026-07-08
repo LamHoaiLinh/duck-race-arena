@@ -1124,6 +1124,7 @@ class GameApp {
       startBtn: qs('#startBtn'),
       replayBtn: qs('#replayBtn'),
       randomMapBtn: qs('#randomMapBtn'),
+      endRaceBtn: qs('#endRaceBtn'),
       resetBtn: qs('#resetBtn'),
       timerText: qs('#timerText'),
       raceTitle: qs('#raceTitle'),
@@ -1262,25 +1263,42 @@ class GameApp {
     qsa('[data-sample]').forEach((button) => {
       button.addEventListener('click', () => {
         const count = Number(button.dataset.sample);
+        this.cancelActiveRace();
         this.dom.playerNames.value = SAMPLE_NAMES[count].join('\n');
         this.preparePreview();
       });
     });
 
-    this.dom.durationRange.addEventListener('input', () => this.syncDuration(Number(this.dom.durationRange.value)));
-    this.dom.durationNumber.addEventListener('input', () => this.syncDuration(Number(this.dom.durationNumber.value)));
-    this.dom.mapSelect.addEventListener('change', () => this.preparePreview());
-    this.dom.playerNames.addEventListener('input', () => this.preparePreview());
+    this.dom.durationRange.addEventListener('input', () => {
+      this.cancelActiveRace();
+      this.syncDuration(Number(this.dom.durationRange.value));
+    });
+    this.dom.durationNumber.addEventListener('input', () => {
+      this.cancelActiveRace();
+      this.syncDuration(Number(this.dom.durationNumber.value));
+    });
+    this.dom.mapSelect.addEventListener('change', () => this.restartAfterMapChange());
+    this.dom.playerNames.addEventListener('input', () => {
+      this.cancelActiveRace();
+      this.preparePreview();
+    });
 
     this.dom.startBtn.addEventListener('click', () => this.startRace());
     this.dom.replayBtn.addEventListener('click', () => this.startRace());
+    this.dom.endRaceBtn.addEventListener('click', () => this.endRaceManually());
     this.dom.playAgainBigBtn.addEventListener('click', () => { this.hideResults(); this.startRace(); });
     this.dom.closeResultBtn.addEventListener('click', () => this.hideResults());
     this.dom.randomMapBtn.addEventListener('click', () => {
+      const wasRunning = Boolean(this.engine?.running);
+      this.cancelActiveRace();
       const current = this.dom.mapSelect.value;
       const options = MAP_DATA.filter((map) => map.id !== current);
       this.dom.mapSelect.value = pick(options).id;
-      this.preparePreview();
+      if (wasRunning && parseNames(this.dom.playerNames.value).length >= GAME_CONFIG.minPlayers) {
+        this.startRace();
+      } else {
+        this.preparePreview();
+      }
     });
     this.dom.resetBtn.addEventListener('click', () => {
       const hasNames = parseNames(this.dom.playerNames.value).length > 0;
@@ -1317,6 +1335,47 @@ class GameApp {
     document.addEventListener('click', (event) => {
       if (!event.target.closest('.character-card')) this.closeQuickPlayerPickers();
     });
+  }
+
+  cancelActiveRace() {
+    if (this.engine) {
+      this.engine.stop();
+      this.engine.finished = true;
+    }
+    this.engine = null;
+    this.confetti = [];
+    this.rankingSignature = '';
+    this.commentQueue = [];
+    if (this.commentTimer) {
+      clearTimeout(this.commentTimer);
+      this.commentTimer = null;
+    }
+    this.dom.startBtn.disabled = false;
+    this.dom.replayBtn.disabled = true;
+    this.dom.endRaceBtn.disabled = true;
+    this.hideResults();
+  }
+
+  restartAfterMapChange() {
+    const wasRunning = Boolean(this.engine?.running);
+    this.cancelActiveRace();
+    if (wasRunning && parseNames(this.dom.playerNames.value).length >= GAME_CONFIG.minPlayers) {
+      this.startRace();
+    } else {
+      this.preparePreview();
+    }
+  }
+
+  endRaceManually() {
+    if (!this.engine?.running) return;
+    this.engine.stop();
+    this.engine.finished = true;
+    const results = this.engine.getResults();
+    this.dom.startBtn.disabled = false;
+    this.dom.replayBtn.disabled = false;
+    this.dom.endRaceBtn.disabled = true;
+    this.renderRanking(true);
+    this.showResults(this.buildResultGroups(results));
   }
 
   syncDuration(value) {
@@ -1461,6 +1520,7 @@ class GameApp {
     this.rankingSignature = '';
     this.dom.startBtn.disabled = true;
     this.dom.replayBtn.disabled = true;
+    this.dom.endRaceBtn.disabled = false;
     this.dom.timerText.textContent = `${duration.toFixed(1)}s`;
     this.showComment('Cuộc đua bắt đầu! Ai chạm vạch đích trước sẽ được tính hạng cao hơn.');
     this.renderRanking(true);
@@ -1473,6 +1533,7 @@ class GameApp {
     this.rankingSignature = '';
     this.dom.startBtn.disabled = false;
     this.dom.replayBtn.disabled = true;
+    this.dom.endRaceBtn.disabled = true;
     this.dom.timerText.textContent = `${this.getDuration().toFixed(1)}s`;
     this.dom.rankingList.innerHTML = '';
     this.showComment('Danh sách đã reset. Nhập tên người chơi mới để bắt đầu.');
@@ -1507,6 +1568,7 @@ class GameApp {
 
   showComment(text) {
     this.lastCommentAt = performance.now();
+    if (!this.dom.ticker) return;
     this.dom.ticker.innerHTML = `<span>${this.escapeHtml(text)}</span>`;
   }
 
@@ -1522,6 +1584,7 @@ class GameApp {
   finishRace(results) {
     this.dom.startBtn.disabled = false;
     this.dom.replayBtn.disabled = false;
+    this.dom.endRaceBtn.disabled = true;
     const groups = this.buildResultGroups(results);
     const firstGroup = groups[0];
     if (firstGroup?.items.length === 2 && firstGroup.items.every((item) => item.finishedAt !== null)) {
@@ -1582,16 +1645,22 @@ class GameApp {
   renderRanking(force = false) {
     if (!this.engine) return;
     const ranking = this.engine.getRanking();
-    const signature = ranking.map((racer) => racer.id).join('|');
+    const visibleEntries = ranking.slice(0, 3).map((racer, index) => ({ racer, actualRank: index + 1, isLast: false }));
+    if (ranking.length > 3) {
+      const lastIndex = ranking.length - 1;
+      visibleEntries.push({ racer: ranking[lastIndex], actualRank: ranking.length, isLast: true });
+    }
+
+    const signature = visibleEntries.map((entry) => `${entry.actualRank}:${entry.racer.id}`).join('|');
     const changed = force || signature !== this.rankingSignature;
     this.rankingSignature = signature;
 
-    this.dom.rankingList.innerHTML = ranking.map((racer, index) => {
+    this.dom.rankingList.innerHTML = visibleEntries.map(({ racer, actualRank, isLast }) => {
       const progressPercent = Math.round(racer.progress * 100);
       const finishText = racer.finishedAt !== null ? `${round1(racer.finishedAt)}s` : `${progressPercent}%`;
       return `
-        <li class="rank-item ${changed ? 'rank-jump' : ''}">
-          <div class="rank-no">${index + 1}</div>
+        <li class="rank-item ${changed ? 'rank-jump' : ''} ${isLast ? 'rank-last' : ''}">
+          <div class="rank-no">${isLast ? 'Chót' : actualRank}</div>
           <img class="rank-avatar" src="${racer.character.thumb}" alt="${racer.character.label}">
           <div class="rank-name">
             <strong>${this.escapeHtml(racer.name)}</strong>
@@ -2534,7 +2603,7 @@ class GameApp {
 function bootMintDuckRaceArena() {
   if (window.gameApp) return;
   try {
-    window.__MINT_DUCK_BUILD__ = '2026-07-08-six-crossing-maps-01';
+    window.__MINT_DUCK_BUILD__ = '2026-07-08-live-overlay-stop-race-01';
     window.gameApp = new GameApp();
   } catch (error) {
     console.error('Mint Duck Race Arena khoi dong that bai:', error);
