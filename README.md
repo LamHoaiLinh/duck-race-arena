@@ -111,3 +111,8 @@ This package includes `.nojekyll` so GitHub Pages serves static assets directly 
 - Da them nut Ket thuc de dung cuoc dua va hien ket qua tam thoi.
 - Khi doi map trong luc dang dua, game se dung cuoc dua cu va khoi dong mot luot moi tren map moi.
 - Khi thay doi danh sach nguoi choi hoac thoi gian, cuoc dua dang chay se dung va quay ve trang thai san sang.
+
+- Da gop bang xep hang live va cum nut dieu khien thanh mot HUD duy nhat, dat tinh o phia tren map nen khong che duong dua tren dien thoai.
+- HUD mobile duoc thu gon: nut nho, 4 o Top 3 + hang chot nam cung mot hang va co cuon ngang neu man hinh qua hep.
+- Da them che do chon 1, 2, 3 hoac 5 vong. Thoi gian hien tai duoc tinh theo moi vong; vi du 3 vong x 15 giay/vong = 45 giay tong.
+- Engine ho tro tien do nhieu vong, tinh hang theo tong so vong da hoan thanh va chi ve dich khi du so vong.

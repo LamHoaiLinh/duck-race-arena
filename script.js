@@ -11,6 +11,9 @@ const GAME_CONFIG = {
   defaultDuration: 30,
   minDuration: 15,
   maxDuration: 90,
+  defaultLaps: 1,
+  minLaps: 1,
+  maxLaps: 5,
   eventMinGap: 2.7,
   eventMaxGap: 4.6,
   commentMinVisibleMs: 2200,
@@ -589,8 +592,10 @@ function traceOffsetPath(ctx, track, offset) {
 }
 
 class RaceEngine {
-  constructor({ names, duration, map, characters, onEvent, onFinish }) {
+  constructor({ names, duration, laps = GAME_CONFIG.defaultLaps, map, characters, onEvent, onFinish }) {
+    this.totalLaps = clamp(Math.round(laps), GAME_CONFIG.minLaps, GAME_CONFIG.maxLaps);
     this.duration = duration;
+    this.lapDuration = duration / this.totalLaps;
     this.map = map;
     this.onEvent = onEvent;
     this.onFinish = onFinish;
@@ -681,6 +686,7 @@ class RaceEngine {
       racer.jumpPad = {
         progress: clamp(base + jitter, GAME_CONFIG.jumpProgressMin, GAME_CONFIG.jumpProgressMax),
         used: false,
+        lastTriggeredLap: -1,
         activeUntil: 0,
         result: 'ready'
       };
@@ -755,19 +761,19 @@ class RaceEngine {
       if (isLeader && leaderProgress > 0.23 && raceFactor < 0.7) rubber -= 0.018;
 
       const finalPush = raceFactor > 0.8 ? 1 + racer.stats.burst * 0.03 : 1;
-      const idealProgress = this.elapsed / racer.targetFinishTime;
+      const idealProgress = (this.elapsed / racer.targetFinishTime) * this.totalLaps;
       const pacingDiff = idealProgress - racer.progress;
       const pacingCorrection = clamp(pacingDiff * 0.46, -0.020, 0.034);
-      const baseRate = 1 / racer.targetFinishTime;
+      const baseRate = this.totalLaps / racer.targetFinishTime;
       const variation = 1 + Math.sin((this.elapsed * 1.55) + racer.index * 0.9) * 0.01 + rand(-0.005, 0.005);
 
       let delta = dt * baseRate * racer.stats.baseSpeed * effectMult * rubber * finalPush * variation;
       delta += dt * pacingCorrection;
-      const softCapBeforeFinish = this.elapsed < racer.targetFinishTime ? 0.996 : 1.03;
+      const softCapBeforeFinish = this.elapsed < racer.targetFinishTime ? this.totalLaps - 0.004 : this.totalLaps + 0.03;
       racer.progress = clamp(racer.progress + delta, 0, softCapBeforeFinish);
 
-      if (this.elapsed >= racer.targetFinishTime && racer.progress < 1) {
-        racer.progress = Math.min(1, racer.progress + dt * 0.72);
+      if (this.elapsed >= racer.targetFinishTime && racer.progress < this.totalLaps) {
+        racer.progress = Math.min(this.totalLaps, racer.progress + dt * 0.72);
       }
     }
   }
@@ -796,7 +802,7 @@ class RaceEngine {
       if (doLeaderDrop && snapshot.length >= 3) targetIndex = Math.max(2, targetIndex);
       const target = snapshot[targetIndex];
       const from = Number.isFinite(originalLast.displayProgress) ? originalLast.displayProgress : originalLast.progress;
-      const to = Math.min(0.985, Math.max(originalLast.progress, target.progress + rand(0.006, 0.014)));
+      const to = Math.min(this.totalLaps - 0.015, Math.max(originalLast.progress, target.progress + rand(0.006, 0.014)));
       originalLast.progress = to;
       originalLast.targetFinishTime = Math.min(originalLast.targetFinishTime, this.duration * rand(0.91, 1.02));
       originalLast.jumpAnim = {
@@ -831,11 +837,14 @@ class RaceEngine {
   checkJumpPadCollisions() {
     for (const racer of this.racers) {
       const pad = racer.jumpPad;
-      if (!pad || pad.used || racer.finishedAt !== null) continue;
-      const crossed = racer.progress >= pad.progress - GAME_CONFIG.jumpTriggerWindow;
+      if (!pad || racer.finishedAt !== null) continue;
+      const lapIndex = Math.min(this.totalLaps - 1, Math.floor(Math.max(0, racer.progress)));
+      const lapProgress = racer.progress - lapIndex;
+      const crossed = lapIndex > pad.lastTriggeredLap && lapProgress >= pad.progress - GAME_CONFIG.jumpTriggerWindow;
       if (!crossed) continue;
 
-      pad.used = true;
+      pad.lastTriggeredLap = lapIndex;
+      pad.used = lapIndex >= this.totalLaps - 1;
       pad.activeUntil = this.elapsed + GAME_CONFIG.visualMinTime;
       const successChance = clamp(0.45 + racer.stats.courage * 0.18 + racer.stats.luck * 0.24 + racer.stats.stability * 0.13, 0.38, 0.88);
       const success = Math.random() < successChance;
@@ -844,7 +853,7 @@ class RaceEngine {
       if (success) {
         pad.result = 'success';
         const fromProgress = Number.isFinite(racer.displayProgress) ? racer.displayProgress : racer.progress;
-        const toProgress = Math.min(0.996, racer.progress + jumpPower);
+        const toProgress = Math.min(this.totalLaps - 0.004, racer.progress + jumpPower);
         racer.progress = toProgress;
         racer.jumpAnim = {
           from: fromProgress,
@@ -1068,8 +1077,8 @@ class RaceEngine {
   checkFinish() {
     const newlyFinished = [];
     for (const racer of this.racers) {
-      if (racer.finishedAt === null && racer.progress >= 1) {
-        racer.progress = 1;
+      if (racer.finishedAt === null && racer.progress >= this.totalLaps) {
+        racer.progress = this.totalLaps;
         racer.finishedAt = this.elapsed;
         newlyFinished.push(racer);
       }
@@ -1093,7 +1102,7 @@ class RaceEngine {
     if (timeExpired) {
       const ranking = this.getRanking();
       if (ranking[0] && ranking[0].finishedAt === null) {
-        ranking[0].progress = 1;
+        ranking[0].progress = this.totalLaps;
         ranking[0].finishedAt = this.elapsed;
       }
       this.finished = true;
@@ -1108,6 +1117,8 @@ class RaceEngine {
       name: racer.name,
       character: racer.character,
       progress: racer.progress,
+      totalLaps: this.totalLaps,
+      lapDuration: this.lapDuration,
       finishedAt: racer.finishedAt
     }));
   }
@@ -1121,6 +1132,8 @@ class GameApp {
       durationRange: qs('#raceDuration'),
       durationNumber: qs('#durationNumber'),
       durationLabel: qs('#durationLabel'),
+      lapCount: qs('#lapCount'),
+      totalRaceLabel: qs('#totalRaceLabel'),
       startBtn: qs('#startBtn'),
       replayBtn: qs('#replayBtn'),
       randomMapBtn: qs('#randomMapBtn'),
@@ -1168,6 +1181,7 @@ class GameApp {
     this.populateCharacterGallery();
     this.bindEvents();
     this.preloadCharacterImages();
+    this.dom.lapCount.value = String(GAME_CONFIG.defaultLaps);
     this.syncDuration(GAME_CONFIG.defaultDuration);
     this.preparePreview();
     this.resizeCanvas();
@@ -1277,6 +1291,10 @@ class GameApp {
       this.cancelActiveRace();
       this.syncDuration(Number(this.dom.durationNumber.value));
     });
+    this.dom.lapCount.addEventListener('change', () => {
+      this.cancelActiveRace();
+      this.syncLapCount(Number(this.dom.lapCount.value));
+    });
     this.dom.mapSelect.addEventListener('change', () => this.restartAfterMapChange());
     this.dom.playerNames.addEventListener('input', () => {
       this.cancelActiveRace();
@@ -1379,20 +1397,37 @@ class GameApp {
   }
 
   syncDuration(value) {
-    const duration = clamp(Number.isFinite(value) ? value : GAME_CONFIG.defaultDuration, GAME_CONFIG.minDuration, GAME_CONFIG.maxDuration);
-    this.dom.durationRange.value = duration;
-    this.dom.durationNumber.value = duration;
-    this.dom.durationLabel.textContent = `${duration} giây`;
-    this.dom.timerText.textContent = `${duration.toFixed(1)}s`;
+    const lapDuration = clamp(Number.isFinite(value) ? value : GAME_CONFIG.defaultDuration, GAME_CONFIG.minDuration, GAME_CONFIG.maxDuration);
+    this.dom.durationRange.value = lapDuration;
+    this.dom.durationNumber.value = lapDuration;
+    this.dom.durationLabel.textContent = `${lapDuration} giây/vòng`;
+    const laps = this.getLapCount();
+    const total = lapDuration * laps;
+    this.dom.totalRaceLabel.textContent = `${laps} vòng · Tổng ${total} giây`;
+    this.dom.timerText.textContent = `Vòng 1/${laps} · ${total.toFixed(1)}s`;
     if (!this.engine?.running) this.preparePreview();
+  }
+
+  syncLapCount(value) {
+    const laps = clamp(Math.round(Number.isFinite(value) ? value : GAME_CONFIG.defaultLaps), GAME_CONFIG.minLaps, GAME_CONFIG.maxLaps);
+    this.dom.lapCount.value = String(laps);
+    this.syncDuration(Number(this.dom.durationRange.value));
   }
 
   getSelectedMap() {
     return MAP_DATA.find((map) => map.id === this.dom.mapSelect.value) || MAP_DATA[0];
   }
 
-  getDuration() {
+  getLapCount() {
+    return clamp(Math.round(Number(this.dom.lapCount.value) || GAME_CONFIG.defaultLaps), GAME_CONFIG.minLaps, GAME_CONFIG.maxLaps);
+  }
+
+  getLapDuration() {
     return clamp(Number(this.dom.durationRange.value), GAME_CONFIG.minDuration, GAME_CONFIG.maxDuration);
+  }
+
+  getDuration() {
+    return this.getLapDuration() * this.getLapCount();
   }
 
   ensureCharacterSelections(names) {
@@ -1471,6 +1506,7 @@ class GameApp {
       this.engine = new RaceEngine({
         names,
         duration: this.getDuration(),
+        laps: this.getLapCount(),
         map,
         characters,
         onEvent: (event) => this.handleEngineEvent(event),
@@ -1510,6 +1546,7 @@ class GameApp {
     this.engine = new RaceEngine({
       names,
       duration,
+      laps: this.getLapCount(),
       map,
       characters,
       onEvent: (event) => this.handleEngineEvent(event),
@@ -1521,8 +1558,9 @@ class GameApp {
     this.dom.startBtn.disabled = true;
     this.dom.replayBtn.disabled = true;
     this.dom.endRaceBtn.disabled = false;
-    this.dom.timerText.textContent = `${duration.toFixed(1)}s`;
-    this.showComment('Cuộc đua bắt đầu! Ai chạm vạch đích trước sẽ được tính hạng cao hơn.');
+    const laps = this.getLapCount();
+    this.dom.timerText.textContent = `Vòng 1/${laps} · ${duration.toFixed(1)}s`;
+    this.showComment(`Cuộc đua ${laps} vòng bắt đầu! Người hoàn thành đủ vòng và chạm đích trước sẽ xếp hạng cao hơn.`);
     this.renderRanking(true);
   }
 
@@ -1534,7 +1572,7 @@ class GameApp {
     this.dom.startBtn.disabled = false;
     this.dom.replayBtn.disabled = true;
     this.dom.endRaceBtn.disabled = true;
-    this.dom.timerText.textContent = `${this.getDuration().toFixed(1)}s`;
+    this.dom.timerText.textContent = `Vòng 1/${this.getLapCount()} · ${this.getDuration().toFixed(1)}s`;
     this.dom.rankingList.innerHTML = '';
     this.showComment('Danh sách đã reset. Nhập tên người chơi mới để bắt đầu.');
   }
@@ -1622,7 +1660,9 @@ class GameApp {
       const names = group.items.map((item) => this.escapeHtml(item.name)).join(', ');
       const progressLabel = group.items.map((item) => {
         if (item.finishedAt !== null) return `${round1(item.finishedAt)}s`;
-        return `${Math.round(item.progress * 100)}% chặng đua`;
+        const totalLaps = item.totalLaps || 1;
+        const lapNo = Math.min(totalLaps, Math.floor(Math.max(0, item.progress)) + 1);
+        return `Vòng ${lapNo}/${totalLaps} · ${Math.round((item.progress / totalLaps) * 100)}% tổng chặng`;
       }).join(' · ');
       const characterNames = group.items.map((item) => item.character.label).join(', ');
       return `
@@ -1656,8 +1696,10 @@ class GameApp {
     this.rankingSignature = signature;
 
     this.dom.rankingList.innerHTML = visibleEntries.map(({ racer, actualRank, isLast }) => {
-      const progressPercent = Math.round(racer.progress * 100);
-      const finishText = racer.finishedAt !== null ? `${round1(racer.finishedAt)}s` : `${progressPercent}%`;
+      const totalLaps = this.engine.totalLaps || 1;
+      const lapNo = Math.min(totalLaps, Math.floor(Math.min(racer.progress, totalLaps - 0.0001)) + 1);
+      const lapPercent = Math.round((((racer.progress % 1) + 1) % 1) * 100);
+      const finishText = racer.finishedAt !== null ? `${round1(racer.finishedAt)}s` : `V${lapNo}/${totalLaps} · ${lapPercent}%`;
       return `
         <li class="rank-item ${changed ? 'rank-jump' : ''} ${isLast ? 'rank-last' : ''}">
           <div class="rank-no">${isLast ? 'Chót' : actualRank}</div>
@@ -1708,7 +1750,10 @@ class GameApp {
     if (this.engine?.running) {
       this.engine.update(dt);
       const remaining = Math.max(0, this.engine.duration - this.engine.elapsed);
-      this.dom.timerText.textContent = `${remaining.toFixed(1)}s`;
+      const leader = this.engine.getRanking()[0];
+      const totalLaps = this.engine.totalLaps || 1;
+      const currentLap = leader ? Math.min(totalLaps, Math.floor(Math.min(leader.progress, totalLaps - 0.0001)) + 1) : 1;
+      this.dom.timerText.textContent = `Vòng ${currentLap}/${totalLaps} · ${remaining.toFixed(1)}s`;
       this.renderRanking();
     }
 
@@ -2603,7 +2648,7 @@ class GameApp {
 function bootMintDuckRaceArena() {
   if (window.gameApp) return;
   try {
-    window.__MINT_DUCK_BUILD__ = '2026-07-08-live-overlay-stop-race-01';
+    window.__MINT_DUCK_BUILD__ = '2026-07-08-compact-hud-multilap-01';
     window.gameApp = new GameApp();
   } catch (error) {
     console.error('Mint Duck Race Arena khoi dong that bai:', error);
