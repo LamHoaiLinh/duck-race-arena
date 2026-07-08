@@ -90,11 +90,8 @@ This package includes `.nojekyll` so GitHub Pages serves static assets directly 
 - Da kiem tra cu phap JavaScript bang node --check; 15 map deu tao duoc track geometry hop le; day du 16 bo asset nhan vat, moi bo co thumb va 5 frame.
 
 - Da them nhan vat moi NV17 (Tho Hong) tu bo asset anh gui, gom 5 frame va thumb, da can giua va chuan hoa kich thuoc de game hien thi on dinh.
-<<<<<<< HEAD
 
 - Da them 5 nhan vat moi: Meo trang (NV18), Chim canh cut (NV19), Cho trang (NV20), Khi nau (NV21), Ky lan (NV22). Tat ca da duoc scale va can baseline theo chuan game.
 - Nut Reset ten nay co hop thoai xac nhan de tranh bam nham khi cuon man hinh.
 - Man hinh ket qua hien thi toan bo thu hang, khong con gioi han Top 3.
 - Bang xep hang live da duoc dua vao cung card duong dua va mo rong full chieu ngang, bo cuc gon hon.
-=======
->>>>>>> e284845503634616a1f1a983d82e9df53aea45a3

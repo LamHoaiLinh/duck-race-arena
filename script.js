@@ -44,7 +44,6 @@ const SAMPLE_NAMES = {
   8: ['Khải', 'Lan', 'Tùng', 'Minh', 'Vy', 'Huy', 'An', 'Bình']
 };
 
-<<<<<<< HEAD
 const CHARACTER_LABELS = {
   nv17: 'Thỏ Hồng',
   nv18: 'Mèo trắng',
@@ -59,13 +58,6 @@ const CHARACTER_DATA = Array.from({ length: 22 }, (_, i) => {
   return {
     id,
     label: CHARACTER_LABELS[id] || `NV ${String(i + 1).padStart(2, '0')}`,
-=======
-const CHARACTER_DATA = Array.from({ length: 17 }, (_, i) => {
-  const id = `nv${String(i + 1).padStart(2, '0')}`;
-  return {
-    id,
-    label: (i === 16 ? 'Tho Hong' : `NV ${String(i + 1).padStart(2, '0')}`),
->>>>>>> e284845503634616a1f1a983d82e9df53aea45a3
     thumb: `assets/animals/${id}/thumb.png`,
     frames: [1, 2, 3, 4, 5].map((frame) => `assets/animals/${id}/frame${frame}.png`)
   };
