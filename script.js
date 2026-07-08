@@ -44,7 +44,6 @@ const SAMPLE_NAMES = {
   8: ['Khải', 'Lan', 'Tùng', 'Minh', 'Vy', 'Huy', 'An', 'Bình']
 };
 
-<<<<<<< HEAD
 const CHARACTER_LABELS = {
   nv17: 'Thỏ Hồng',
   nv18: 'Mèo trắng',
@@ -59,13 +58,6 @@ const CHARACTER_DATA = Array.from({ length: 22 }, (_, i) => {
   return {
     id,
     label: CHARACTER_LABELS[id] || `NV ${String(i + 1).padStart(2, '0')}`,
-=======
-const CHARACTER_DATA = Array.from({ length: 17 }, (_, i) => {
-  const id = `nv${String(i + 1).padStart(2, '0')}`;
-  return {
-    id,
-    label: (i === 16 ? 'Tho Hong' : `NV ${String(i + 1).padStart(2, '0')}`),
->>>>>>> e284845503634616a1f1a983d82e9df53aea45a3
     thumb: `assets/animals/${id}/thumb.png`,
     frames: [1, 2, 3, 4, 5].map((frame) => `assets/animals/${id}/frame${frame}.png`)
   };
@@ -2308,6 +2300,37 @@ class GameApp {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-  window.gameApp = new GameApp();
-});
+function bootMintDuckRaceArena() {
+  if (window.gameApp) return;
+  try {
+    window.__MINT_DUCK_BUILD__ = '2026-07-08-final-fixed-01';
+    window.gameApp = new GameApp();
+  } catch (error) {
+    console.error('Mint Duck Race Arena khoi dong that bai:', error);
+    const ticker = document.querySelector('#commentaryTicker');
+    if (ticker) {
+      ticker.innerHTML = '<span>Game khong khoi dong duoc. Vui long tai lai trang bang Ctrl + F5.</span>';
+    }
+    const canvas = document.querySelector('#raceCanvas');
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ECFFF7';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#12372A';
+        ctx.font = '700 24px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Khong the khoi dong game', canvas.width / 2, canvas.height / 2 - 12);
+        ctx.font = '500 16px system-ui, sans-serif';
+        ctx.fillText('Hay bam Ctrl + F5 de tai lai toan bo tep moi.', canvas.width / 2, canvas.height / 2 + 20);
+      }
+    }
+  }
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', bootMintDuckRaceArena, { once: true });
+} else {
+  bootMintDuckRaceArena();
+}
