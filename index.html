@@ -329,6 +329,93 @@ const MAP_DATA = [
     description: 'Quỹ đạo bất đối xứng kiểu hành tinh lạ, cua ngắn nối cua dài rất khó giữ nhịp.',
     bgA: '#D7F0ED', bgB: '#F3FFFC', accent: '#83BFC0',
     points: [[0.10,0.60],[0.16,0.25],[0.39,0.13],[0.58,0.27],[0.76,0.12],[0.91,0.34],[0.82,0.55],[0.91,0.78],[0.68,0.88],[0.55,0.68],[0.37,0.86],[0.16,0.77],[0.28,0.55]]
+  },
+  {
+    id: 'skybridge-knot',
+    name: 'Skybridge Knot ★★',
+    description: 'Nút giao ba tầng với hai cầu vượt và một đoạn hầm chui ở giữa.',
+    bgA: '#CDEFE5', bgB: '#F2FFFB', accent: '#6FC4AE',
+    allowCrossings: true,
+    trackWidthFactor: 0.82,
+    structures: [
+      { type: 'overpass', progress: 0.18, span: 0.042 },
+      { type: 'tunnel', progress: 0.47, span: 0.032 },
+      { type: 'overpass', progress: 0.73, span: 0.040 }
+    ],
+    points: [[0.10,0.68],[0.20,0.22],[0.43,0.18],[0.71,0.74],[0.88,0.36],[0.72,0.18],[0.45,0.78],[0.22,0.82],[0.12,0.47],[0.39,0.50],[0.67,0.47],[0.88,0.76],[0.58,0.87],[0.30,0.31]]
+  },
+  {
+    id: 'subway-serpent',
+    name: 'Subway Serpent ★★',
+    description: 'Đường rắn tự cắt, có hai cửa hầm và một cầu nổi chạy chéo qua trung tâm.',
+    bgA: '#D7EEE7', bgB: '#F5FFFB', accent: '#7FB9A7',
+    allowCrossings: true,
+    trackWidthFactor: 0.80,
+    structures: [
+      { type: 'tunnel', progress: 0.12, span: 0.034 },
+      { type: 'overpass', progress: 0.39, span: 0.046 },
+      { type: 'tunnel', progress: 0.66, span: 0.034 }
+    ],
+    points: [[0.09,0.76],[0.18,0.20],[0.48,0.24],[0.78,0.80],[0.91,0.48],[0.75,0.19],[0.47,0.73],[0.22,0.84],[0.10,0.50],[0.34,0.39],[0.66,0.61],[0.88,0.30],[0.60,0.12],[0.31,0.66]]
+  },
+  {
+    id: 'infinity-stack',
+    name: 'Infinity Stack ★★',
+    description: 'Hai vòng vô cực xếp chồng, liên tục chuyển từ cầu vượt sang hầm chui.',
+    bgA: '#D8F2EA', bgB: '#F7FFFC', accent: '#84C8B2',
+    allowCrossings: true,
+    trackWidthFactor: 0.78,
+    structures: [
+      { type: 'overpass', progress: 0.10, span: 0.040 },
+      { type: 'tunnel', progress: 0.34, span: 0.030 },
+      { type: 'overpass', progress: 0.58, span: 0.042 },
+      { type: 'tunnel', progress: 0.82, span: 0.030 }
+    ],
+    points: [[0.10,0.58],[0.22,0.18],[0.48,0.20],[0.72,0.82],[0.90,0.58],[0.77,0.20],[0.51,0.79],[0.25,0.22],[0.10,0.48],[0.31,0.76],[0.61,0.24],[0.89,0.47],[0.68,0.84],[0.37,0.17]]
+  },
+  {
+    id: 'metro-interchange',
+    name: 'Metro Interchange ★★',
+    description: 'Nút giao kiểu vành đai đô thị, nhiều nhánh đan xen và cua đổi tầng liên tục.',
+    bgA: '#D5EEE8', bgB: '#F4FFFB', accent: '#72B6A8',
+    allowCrossings: true,
+    trackWidthFactor: 0.78,
+    structures: [
+      { type: 'overpass', progress: 0.22, span: 0.044 },
+      { type: 'tunnel', progress: 0.43, span: 0.032 },
+      { type: 'overpass', progress: 0.61, span: 0.044 },
+      { type: 'tunnel', progress: 0.87, span: 0.032 }
+    ],
+    points: [[0.08,0.70],[0.18,0.26],[0.42,0.14],[0.65,0.72],[0.89,0.24],[0.92,0.60],[0.70,0.87],[0.44,0.30],[0.19,0.86],[0.10,0.48],[0.37,0.58],[0.61,0.18],[0.86,0.78],[0.56,0.82],[0.30,0.20]]
+  },
+  {
+    id: 'spiral-flyover',
+    name: 'Spiral Flyover ★★',
+    description: 'Đường xoắn ốc mở rộng ra ngoài, có cầu vượt kép và hầm cong ở đoạn cuối.',
+    bgA: '#D3F0E3', bgB: '#F3FFF9', accent: '#79C39D',
+    allowCrossings: true,
+    trackWidthFactor: 0.80,
+    structures: [
+      { type: 'overpass', progress: 0.16, span: 0.048 },
+      { type: 'overpass', progress: 0.48, span: 0.044 },
+      { type: 'tunnel', progress: 0.76, span: 0.036 }
+    ],
+    points: [[0.11,0.73],[0.13,0.28],[0.42,0.13],[0.78,0.25],[0.88,0.60],[0.68,0.86],[0.36,0.78],[0.24,0.51],[0.43,0.31],[0.69,0.42],[0.63,0.68],[0.42,0.62],[0.52,0.46],[0.81,0.79],[0.90,0.37]]
+  },
+  {
+    id: 'dragonfly-cross',
+    name: 'Dragonfly Cross ★★',
+    description: 'Hình chuồn chuồn bốn cánh, trung tâm giao cắt dày với cầu và hầm xen kẽ.',
+    bgA: '#D8F5EA', bgB: '#F6FFFC', accent: '#78CDB4',
+    allowCrossings: true,
+    trackWidthFactor: 0.76,
+    structures: [
+      { type: 'tunnel', progress: 0.09, span: 0.032 },
+      { type: 'overpass', progress: 0.29, span: 0.044 },
+      { type: 'tunnel', progress: 0.53, span: 0.032 },
+      { type: 'overpass', progress: 0.77, span: 0.044 }
+    ],
+    points: [[0.09,0.55],[0.20,0.18],[0.46,0.38],[0.73,0.14],[0.91,0.46],[0.69,0.58],[0.88,0.84],[0.54,0.70],[0.28,0.88],[0.10,0.66],[0.31,0.48],[0.13,0.25],[0.47,0.18],[0.66,0.46],[0.43,0.83],[0.22,0.62]]
   }
 ];
 
@@ -511,8 +598,9 @@ function buildTrackGeometry(width, height, laneCount, map) {
 
   // Bo giao diem cua centerline truoc khi lam muot.
   // Ban cu dung spline tren duong tu cat nhau nen track bi ve de/chong lop, nhat la tren mobile.
-  const simplePath = untangleClosedPath(pathPoints);
-  const samples = buildClosedChaikin(simplePath, 4);
+  const simplePath = map.allowCrossings ? pathPoints : untangleClosedPath(pathPoints);
+  const smoothingPasses = Number.isFinite(map.smoothingPasses) ? map.smoothingPasses : 4;
+  const samples = buildClosedChaikin(simplePath, smoothingPasses);
 
   let totalLength = 0;
   const enriched = samples.map((point, index) => {
@@ -539,7 +627,8 @@ function buildTrackGeometry(width, height, laneCount, map) {
   const minDim = Math.min(width, height);
   const preferredLaneWidth = clamp(minDim * 0.032, 10, 18);
   const maxTrackWidth = clamp(minDim * 0.245, 62, 116);
-  const trackWidth = clamp(preferredLaneWidth * laneCount, 58, maxTrackWidth);
+  const trackWidthFactor = Number.isFinite(map.trackWidthFactor) ? map.trackWidthFactor : 1;
+  const trackWidth = clamp(preferredLaneWidth * laneCount * trackWidthFactor, 54, maxTrackWidth * trackWidthFactor);
   const laneWidth = trackWidth / laneCount;
 
   return {
@@ -1791,6 +1880,9 @@ class GameApp {
       this.strokeOffsetDashed(ctx, track, offset, [ 'rgba(255,255,255,0.86)' ], 2, 16, 14);
     }
 
+    // Ve cau vuot / ham chui cho cac map dac biet.
+    this.drawTrackStructures(ctx, track, map);
+
     // Start / finish line.
     this.drawFinishLine(ctx, track);
 
@@ -1803,6 +1895,145 @@ class GameApp {
       const p = getLanePoint(track, lane, 0.012);
       ctx.fillText(String(lane + 1), p.x - p.nx * 16, p.y - p.ny * 16);
     }
+    ctx.restore();
+  }
+
+  traceTrackSegment(ctx, track, progress, span = 0.04, offset = 0, steps = 28) {
+    const start = progress - span / 2;
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i += 1) {
+      const t = i / steps;
+      const p = sampleTrack(track, start + span * t);
+      const x = p.x + p.nx * offset;
+      const y = p.y + p.ny * offset;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+  }
+
+  drawTrackStructures(ctx, track, map) {
+    if (!Array.isArray(map.structures) || !map.structures.length) return;
+
+    for (const structure of map.structures) {
+      const progress = Number.isFinite(structure.progress) ? structure.progress : 0.5;
+      const span = Number.isFinite(structure.span) ? structure.span : 0.04;
+      if (structure.type === 'overpass') {
+        this.drawOverpass(ctx, track, progress, span);
+      } else if (structure.type === 'tunnel') {
+        this.drawTunnel(ctx, track, progress, span);
+      }
+    }
+  }
+
+  drawOverpass(ctx, track, progress, span) {
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    // Bong sau lam ro doan cau nam tren cung.
+    ctx.shadowColor = 'rgba(0,0,0,0.36)';
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 12;
+    this.traceTrackSegment(ctx, track, progress, span, 0);
+    ctx.strokeStyle = 'rgba(54,61,66,0.58)';
+    ctx.lineWidth = track.trackWidth + 28;
+    ctx.stroke();
+
+    ctx.shadowColor = 'transparent';
+    this.traceTrackSegment(ctx, track, progress, span, 0);
+    ctx.strokeStyle = '#B9BDC2';
+    ctx.lineWidth = track.trackWidth + 18;
+    ctx.stroke();
+
+    this.traceTrackSegment(ctx, track, progress, span, 0);
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = track.trackWidth + 10;
+    ctx.stroke();
+
+    this.traceTrackSegment(ctx, track, progress, span, 0);
+    ctx.strokeStyle = '#55585E';
+    ctx.lineWidth = track.trackWidth;
+    ctx.stroke();
+
+    // Lan lines tren mat cau.
+    for (let i = 1; i < track.lanes; i += 1) {
+      const offset = -track.trackWidth / 2 + track.laneWidth * i;
+      ctx.save();
+      ctx.setLineDash([12, 10]);
+      this.traceTrackSegment(ctx, track, progress, span, offset);
+      ctx.strokeStyle = 'rgba(255,255,255,0.90)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Thanh chan cau hai ben.
+    const edge = track.trackWidth / 2 + 7;
+    for (const side of [-1, 1]) {
+      this.traceTrackSegment(ctx, track, progress, span, edge * side);
+      ctx.strokeStyle = '#DDE4E7';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+      this.traceTrackSegment(ctx, track, progress, span, edge * side);
+      ctx.strokeStyle = '#6E777D';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    const mid = sampleTrack(track, progress);
+    ctx.translate(mid.x, mid.y);
+    ctx.rotate(Math.atan2(mid.ty, mid.tx));
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    this.roundRect(ctx, -22, -10, 44, 20, 8);
+    ctx.fill();
+    ctx.fillStyle = '#355B50';
+    ctx.font = '800 9px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CẦU', 0, 0.5);
+    ctx.restore();
+  }
+
+  drawTunnel(ctx, track, progress, span) {
+    const mid = sampleTrack(track, progress);
+    const angle = Math.atan2(mid.ty, mid.tx);
+    const portalLength = clamp(track.trackWidth * 0.72, 34, 64);
+    const portalWidth = track.trackWidth + 24;
+
+    ctx.save();
+    ctx.translate(mid.x, mid.y);
+    ctx.rotate(angle);
+
+    // Than ham va vien cua ham.
+    ctx.fillStyle = 'rgba(27,38,43,0.46)';
+    this.roundRect(ctx, -portalLength / 2 - 7, -portalWidth / 2 - 7, portalLength + 14, portalWidth + 14, 15);
+    ctx.fill();
+    ctx.fillStyle = '#3E474C';
+    this.roundRect(ctx, -portalLength / 2, -portalWidth / 2, portalLength, portalWidth, 12);
+    ctx.fill();
+    ctx.fillStyle = '#242A2E';
+    this.roundRect(ctx, -portalLength / 2 + 5, -track.trackWidth / 2 + 3, portalLength - 10, track.trackWidth - 6, 9);
+    ctx.fill();
+
+    // Den vang trong ham.
+    ctx.fillStyle = '#FACC15';
+    for (let x = -portalLength / 2 + 12; x <= portalLength / 2 - 12; x += 18) {
+      ctx.beginPath();
+      ctx.arc(x, -track.trackWidth / 2 + 8, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x, track.trackWidth / 2 - 8, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    this.roundRect(ctx, -20, -9, 40, 18, 7);
+    ctx.fill();
+    ctx.fillStyle = '#293B36';
+    ctx.font = '800 8px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('HẦM', 0, 0.5);
     ctx.restore();
   }
 
@@ -2141,9 +2372,9 @@ class GameApp {
   drawRacerSprite(ctx, racer, p, now) {
     const laneWidth = Math.max(1, this.trackGeometry?.laneWidth || 22);
 
-    // Chieu cao nhan vat xap xi gap doi be rong mot lan dua.
-    // Co min/max nhe de van doc duoc tren mobile va khong che kin duong dua tren desktop.
-    const drawBox = clamp(laneWidth * 2.05, 30, 64);
+    // Chieu cao nhan vat bang xap xi 3 lan be rong cua mot lane.
+    // Co gioi han an toan nhe de khong bi vo bo cuc tren mobile rat nho.
+    const drawBox = clamp(laneWidth * 3, 36, 96);
     const paused = racer.hardPauseUntil > this.engine.elapsed;
     const wobble = this.hasEffect(racer, 'slideTurn') || this.hasEffect(racer, 'bump') || paused;
 
@@ -2424,7 +2655,7 @@ class GameApp {
 function bootMintDuckRaceArena() {
   if (window.gameApp) return;
   try {
-    window.__MINT_DUCK_BUILD__ = '2026-07-08-final-fixed-01';
+    window.__MINT_DUCK_BUILD__ = '2026-07-08-six-crossing-maps-01';
     window.gameApp = new GameApp();
   } catch (error) {
     console.error('Mint Duck Race Arena khoi dong that bai:', error);

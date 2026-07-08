@@ -99,3 +99,9 @@ This package includes `.nojekyll` so GitHub Pages serves static assets directly 
 - Ban sua loi khoi dong GitHub Pages: nhung truc tiep ma JavaScript vao index.html de tranh script.js bi cache cu/404/khong dong bo sau deploy.
 - Them boot an toan: neu JS loi, giao dien se hien thong bao ro thay vi canvas trong.
 - Van giu script.js rieng de de chinh sua, nhung trang web chay bang ban inline trong index.html.
+
+
+## Cap nhat 6 map giao cat
+- Them 6 map kho: Skybridge Knot, Subway Serpent, Infinity Stack, Metro Interchange, Spiral Flyover va Dragonfly Cross.
+- Cac map moi cho phep centerline tu cat nhau, co cau vuot va ham chui ve truc tiep tren Canvas de tao cam giac nhieu tang.
+- Nhan vat tren duong dua duoc tang kich thuoc len xap xi 3 lan be rong cua mot lane.
